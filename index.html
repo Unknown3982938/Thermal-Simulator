@@ -240,7 +240,6 @@ body.nav-open #site-nav{
 </div>
 </div>
 
-<!-- Navigation menu -->
 <button id="site-nav-toggle" aria-label="Open navigation menu"
  aria-expanded="false" aria-controls="site-nav">☰</button>
 
@@ -255,6 +254,9 @@ body.nav-open #site-nav{
   </div>
  </div>
 
+ <a class="nav-link" href="dashboard.html" data-page="dashboard.html">
+  <span class="nav-icon">⌂</span> Dashboard
+ </a>
  <a class="nav-link" href="index.html" data-page="index.html">
   <span class="nav-icon">🏠</span> Home / Simulation
  </a>
@@ -743,6 +745,8 @@ function updateExplanation(k){
 }
 
 function setModel(k){
+ if(!MODELS[k])k='gas';
+
  mode=k;
  const M=MODELS[k];
 
@@ -791,6 +795,7 @@ function setModel(k){
  initP();
 }
 
+// Create model buttons.
 $('cards').innerHTML=Object.entries(MODELS).map(([k,m])=>`
  <button class="card" data-k="${k}">
   <span class="i">${m.ic}</span>
@@ -798,9 +803,19 @@ $('cards').innerHTML=Object.entries(MODELS).map(([k,m])=>`
  </button>
 `).join('');
 
-document.querySelectorAll('.card').forEach(c=>
- c.onclick=()=>setModel(c.dataset.k)
-);
+// Read the requested model from the URL.
+const requestedMode=new URLSearchParams(location.search).get('mode');
+const initialMode=MODELS[requestedMode]?requestedMode:'gas';
+
+// Update the URL when the user manually changes models.
+document.querySelectorAll('.card').forEach(c=>{
+ c.onclick=()=>{
+  setModel(c.dataset.k);
+  const url=new URL(location.href);
+  url.searchParams.set('mode',c.dataset.k);
+  history.replaceState({},'',url);
+ };
+});
 
 $('opt').onchange=e=>{
  opt=e.target.value;
@@ -821,6 +836,9 @@ $('bPause').onclick=e=>{
 $('bReset').onclick=()=>{
  setModel(mode);
  th=.7;ph=1.15;ds=9;
+ const url=new URL(location.href);
+ url.searchParams.set('mode',mode);
+ history.replaceState({},'',url);
 };
 
 stage.onpointerdown=e=>{
@@ -845,6 +863,7 @@ stage.onwheel=e=>{
 
 new ResizeObserver(()=>{
  const w=stage.clientWidth,h=stage.clientHeight;
+ if(!w||!h)return;
  ren.setSize(w,h,false);
  cam.aspect=w/h;
  cam.updateProjectionMatrix();
@@ -872,7 +891,8 @@ function frame(t){
  requestAnimationFrame(frame);
 }
 
-setModel('gas');
+// Start with the requested model.
+setModel(initialMode);
 requestAnimationFrame(frame);
 
 // ---------- NAVIGATION BEHAVIOR ----------
@@ -906,7 +926,6 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Escape')closeNav();
 });
 
-// Highlight the current page in the navigation.
 const currentPage=location.pathname.split('/').pop()||'index.html';
 
 navLinks.forEach(link=>{
@@ -914,7 +933,6 @@ navLinks.forEach(link=>{
   link.classList.add('active');
   link.setAttribute('aria-current','page');
  }
-
  link.addEventListener('click',closeNav);
 });
 </script>
