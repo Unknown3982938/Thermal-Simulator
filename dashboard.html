@@ -553,6 +553,7 @@ footer strong {
   }
 }
 </style>
+<link rel="stylesheet" href="extras.css">
 </head>
 
 <body>
@@ -584,6 +585,9 @@ footer strong {
   </a>
 
   <div class="nav-label">Learning</div>
+
+  <a class="nav-link" href="journal.html"><span class="nav-icon">📓</span> Experiment Journal</a>
+  <a class="nav-link" href="achievements.html"><span class="nav-icon">🏆</span> Achievements</a>
 
   <a class="nav-link" href="tutorial.html">
     <span class="nav-icon">📖</span> User Tutorial
@@ -703,6 +707,16 @@ footer strong {
     </p>
 
     <div class="quick-grid">
+
+      <a href="journal.html" class="quick-card">
+        <div class="quick-icon">📓</div>
+        <div><strong>Experiment Journal</strong><small>Record observations and conclusions</small></div>
+      </a>
+
+      <a href="achievements.html" class="quick-card">
+        <div class="quick-icon">🏆</div>
+        <div><strong>Achievements</strong><small>Track your laboratory milestones</small></div>
+      </a>
 
       <a href="tutorial.html" class="quick-card">
         <div class="quick-icon">📖</div>
@@ -856,5 +870,6 @@ document.addEventListener("keydown", event => {
 });
 </script>
 
+<script src="extras.js"></script>
 </body>
 </html>

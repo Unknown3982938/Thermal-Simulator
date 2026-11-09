@@ -1,0 +1,12 @@
+/* Thermo Lab 3D — optional interactive extras */
+:root{--extra-accent:#62d4ff;--extra-panel:rgba(17,29,52,.82)}
+#thermo-toast{position:fixed;z-index:11000;left:50%;bottom:24px;transform:translate(-50%,18px);opacity:0;pointer-events:none;max-width:min(90vw,520px);padding:12px 17px;border:1px solid rgba(98,212,255,.32);border-radius:14px;background:rgba(8,16,32,.95);color:#eaf5ff;font:600 13px/1.45 system-ui,sans-serif;box-shadow:0 12px 35px #0006;transition:.25s;text-align:center}
+#thermo-toast.show{opacity:1;transform:translate(-50%,0)}
+#thermo-secret{position:fixed;z-index:10999;inset:0;display:grid;place-items:center;padding:20px;background:#030817eF;opacity:0;visibility:hidden;transition:.25s;font-family:system-ui,sans-serif;color:#eaf5ff;text-align:center}
+#thermo-secret.show{opacity:1;visibility:visible}
+#thermo-secret .secret-card{width:min(100%,430px);padding:28px;border:1px solid #62d4ff66;border-radius:22px;background:linear-gradient(145deg,#132747,#10152d);box-shadow:0 25px 90px #0009}
+#thermo-secret .secret-mark{font-size:48px;margin-bottom:8px}
+#thermo-secret h2{margin:5px 0 10px;font-size:23px}
+#thermo-secret p{color:#b8c9e3;line-height:1.6;font-size:14px}
+#thermo-secret button{margin-top:15px;padding:10px 18px;border:1px solid #62d4ff66;border-radius:11px;background:#183d5a;color:#fff;font-weight:700;cursor:pointer}
+.extras-shortcut{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit}

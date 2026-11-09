@@ -12,6 +12,16 @@
             icon: "🧪"
         },
         {
+            file: "journal.html",
+            name: "Experiment Journal",
+            icon: "📓"
+        },
+        {
+            file: "achievements.html",
+            name: "Achievements",
+            icon: "🏆"
+        },
+        {
             file: "tutorial.html",
             name: "Tutorial",
             icon: "📖"

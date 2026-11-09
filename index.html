@@ -204,6 +204,7 @@ body.nav-open #site-nav{
  #site-nav{right:14px;bottom:78px}
 }
 </style>
+<link rel="stylesheet" href="extras.css">
 </head>
 
 <body>
@@ -260,6 +261,8 @@ body.nav-open #site-nav{
  <a class="nav-link" href="index.html" data-page="index.html">
   <span class="nav-icon">🏠</span> Home / Simulation
  </a>
+ <a class="nav-link" href="journal.html" data-page="journal.html"><span class="nav-icon">📓</span> Experiment Journal</a>
+ <a class="nav-link" href="achievements.html" data-page="achievements.html"><span class="nav-icon">🏆</span> Achievements</a>
  <a class="nav-link" href="tutorial.html" data-page="tutorial.html">
   <span class="nav-icon">📘</span> User Tutorial
  </a>
@@ -748,6 +751,7 @@ function setModel(k){
  if(!MODELS[k])k='gas';
 
  mode=k;
+ if(window.ThermoLabExtras)window.ThermoLabExtras.recordMode(k);
  const M=MODELS[k];
 
  document.querySelectorAll('.card').forEach(c=>
@@ -936,5 +940,6 @@ navLinks.forEach(link=>{
  link.addEventListener('click',closeNav);
 });
 </script>
+<script src="extras.js"></script>
 </body>
 </html>
