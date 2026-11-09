@@ -1,0 +1,860 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080d1c">
+<title>Dashboard | Thermo Lab 3D</title>
+
+<style>
+:root {
+  --bg: #080d1c;
+  --panel: rgba(21, 32, 56, .78);
+  --panel2: rgba(30, 44, 72, .65);
+  --border: rgba(160, 190, 255, .15);
+  --text: #edf3ff;
+  --muted: #9baac5;
+  --blue: #65a8ff;
+  --cyan: #5de0e0;
+  --purple: #a78bfa;
+  --orange: #ffb86b;
+  --green: #71e2ad;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 15% 5%, rgba(44, 101, 190, .22), transparent 38%),
+    radial-gradient(ellipse at 90% 35%, rgba(91, 60, 170, .17), transparent 35%),
+    var(--bg);
+  color: var(--text);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+/* NAVIGATION */
+
+.menu-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1002;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: rgba(18, 30, 52, .9);
+  color: white;
+  font-size: 23px;
+  cursor: pointer;
+  backdrop-filter: blur(15px);
+  transition: .2s;
+}
+
+.menu-button:hover {
+  background: #263d65;
+  transform: translateY(-2px);
+}
+
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, .55);
+  opacity: 0;
+  visibility: hidden;
+  transition: .25s;
+}
+
+.nav-drawer {
+  position: fixed;
+  z-index: 1001;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: min(310px, 85vw);
+  padding: 90px 20px 25px;
+  background: rgba(12, 21, 39, .97);
+  border-right: 1px solid var(--border);
+  backdrop-filter: blur(22px);
+  transform: translateX(-105%);
+  transition: .3s ease;
+  overflow-y: auto;
+}
+
+.nav-open .nav-drawer {
+  transform: translateX(0);
+}
+
+.nav-open .nav-backdrop {
+  opacity: 1;
+  visibility: visible;
+}
+
+.nav-brand {
+  margin-bottom: 30px;
+  padding: 0 12px;
+}
+
+.nav-brand strong {
+  display: block;
+  font-size: 19px;
+}
+
+.nav-brand span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.nav-label {
+  margin: 20px 12px 9px;
+  color: #7185a8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 14px;
+  margin: 5px 0;
+  border-radius: 12px;
+  color: #b8c7df;
+  font-size: 14px;
+  transition: .2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: rgba(89, 151, 255, .15);
+  color: white;
+}
+
+.nav-link.active {
+  border: 1px solid rgba(101, 168, 255, .2);
+}
+
+.nav-icon {
+  width: 23px;
+  text-align: center;
+  font-size: 17px;
+}
+
+/* GENERAL LAYOUT */
+
+.container {
+  width: min(1160px, 92%);
+  margin: auto;
+}
+
+main {
+  padding: 55px 0 70px;
+}
+
+.eyebrow {
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-size: clamp(21px, 3vw, 27px);
+  margin-bottom: 8px;
+}
+
+.section-description {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* HERO */
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 35px;
+  min-height: 340px;
+  padding: 55px 48px;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background:
+    linear-gradient(110deg, rgba(30, 63, 112, .85), rgba(20, 30, 57, .88)),
+    var(--panel);
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, .25);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  right: 0;
+  top: -100px;
+  border-radius: 50%;
+  border: 1px solid rgba(110, 180, 255, .17);
+  box-shadow:
+    0 0 0 35px rgba(110, 180, 255, .035),
+    0 0 0 75px rgba(110, 180, 255, .025);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 570px;
+}
+
+.hero h1 {
+  font-size: clamp(35px, 6vw, 60px);
+  line-height: 1.05;
+  margin: 17px 0;
+  letter-spacing: -2px;
+}
+
+.hero h1 span {
+  background: linear-gradient(90deg, #8dc5ff, #66e7e4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.hero p {
+  color: #bdcbe0;
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 490px;
+}
+
+.hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 750;
+  transition: .2s;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+}
+
+.btn-primary {
+  color: #071326;
+  background: linear-gradient(110deg, #83baff, #65e0df);
+  box-shadow: 0 8px 25px rgba(79, 166, 230, .2);
+}
+
+.btn-secondary {
+  border: 1px solid rgba(190, 215, 255, .25);
+  background: rgba(255, 255, 255, .05);
+  color: white;
+}
+
+.hero-art {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 220px;
+  font-size: 130px;
+  filter: drop-shadow(0 15px 30px rgba(57, 154, 255, .35));
+}
+
+/* MODULES */
+
+.modules {
+  margin-top: 55px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.module-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 245px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--panel2), rgba(14, 24, 44, .8));
+  transition: .25s;
+  overflow: hidden;
+}
+
+.module-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(101, 168, 255, .5);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, .22);
+}
+
+.module-card::after {
+  content: "";
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  right: -40px;
+  top: -45px;
+  border-radius: 50%;
+  background: var(--glow);
+  opacity: .09;
+  filter: blur(20px);
+}
+
+.module-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 20px;
+  border-radius: 14px;
+  background: var(--glow);
+  font-size: 23px;
+}
+
+.module-card h3 {
+  font-size: 17px;
+  margin-bottom: 9px;
+}
+
+.module-card p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  flex: 1;
+}
+
+.module-action {
+  margin-top: 18px;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+/* QUICK ACCESS */
+
+.quick-access {
+  margin-top: 55px;
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 22px;
+}
+
+.quick-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 19px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+  transition: .2s;
+}
+
+.quick-card:hover {
+  background: rgba(50, 76, 120, .4);
+  border-color: rgba(101, 168, 255, .4);
+}
+
+.quick-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: rgba(101, 168, 255, .13);
+  font-size: 20px;
+}
+
+.quick-card strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.quick-card small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* OVERVIEW */
+
+.overview {
+  display: grid;
+  grid-template-columns: 1.3fr .7fr;
+  gap: 20px;
+  margin-top: 55px;
+}
+
+.overview-panel {
+  padding: 27px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--panel);
+}
+
+.overview-panel p {
+  margin-top: 13px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+.objectives {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.objective {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  color: #c8d5e9;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.objective span {
+  color: var(--green);
+  font-size: 15px;
+}
+
+/* FOOTER */
+
+footer {
+  margin-top: 65px;
+  padding: 25px 0;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.8;
+}
+
+footer strong {
+  color: #dce8fa;
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 800px) {
+  .hero {
+    padding: 40px 30px;
+  }
+
+  .hero-art {
+    min-width: 130px;
+    font-size: 90px;
+  }
+
+  .module-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .overview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width: 560px) {
+  main {
+    padding-top: 85px;
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 30px 23px;
+    border-radius: 22px;
+  }
+
+  .hero-art {
+    display: none;
+  }
+
+  .hero h1 {
+    font-size: 39px;
+  }
+
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .module-card {
+    min-height: 215px;
+  }
+
+  .quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .overview-panel {
+    padding: 22px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVIGATION BUTTON -->
+
+<button class="menu-button" id="menuButton"
+        aria-label="Open navigation"
+        aria-expanded="false">
+  ☰
+</button>
+
+<div class="nav-backdrop" id="navBackdrop"></div>
+
+<nav class="nav-drawer" id="navDrawer">
+  <div class="nav-brand">
+    <strong>THERMO LAB 3D</strong>
+    <span>Interactive Thermodynamics Laboratory</span>
+  </div>
+
+  <div class="nav-label">Main</div>
+
+  <a class="nav-link active" href="dashboard.html">
+    <span class="nav-icon">⌂</span> Dashboard
+  </a>
+
+  <a class="nav-link" href="index.html">
+    <span class="nav-icon">⚗</span> Simulation
+  </a>
+
+  <div class="nav-label">Learning</div>
+
+  <a class="nav-link" href="tutorial.html">
+    <span class="nav-icon">📖</span> User Tutorial
+  </a>
+
+  <a class="nav-link" href="references.html">
+    <span class="nav-icon">📚</span> References
+  </a>
+
+  <div class="nav-label">Project</div>
+
+  <a class="nav-link" href="about.html">
+    <span class="nav-icon">ⓘ</span> About
+  </a>
+
+  <a class="nav-link" href="credits.html">
+    <span class="nav-icon">✦</span> Credits
+  </a>
+
+  <a class="nav-link" href="disclaimer.html">
+    <span class="nav-icon">⚠</span> Disclaimer
+  </a>
+</nav>
+
+
+<main>
+<div class="container">
+
+  <!-- HERO -->
+
+  <section class="hero">
+    <div class="hero-content">
+      <div class="eyebrow">Interactive Learning Environment</div>
+
+      <h1>Welcome to<br><span>Thermo Lab 3D</span></h1>
+
+      <p>
+        Explore the principles of thermodynamics through interactive
+        three-dimensional experiments. Observe physical behavior,
+        manipulate variables, and discover how thermal systems work.
+      </p>
+
+      <div class="hero-buttons">
+        <a href="index.html" class="btn btn-primary">
+          ⚗ Open Laboratory →
+        </a>
+
+        <a href="tutorial.html" class="btn btn-secondary">
+          Learn How It Works
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-art" aria-hidden="true">🧪</div>
+  </section>
+
+
+  <!-- EXPERIMENT MODULES -->
+
+  <section class="modules">
+    <div class="section-heading">
+      <div>
+        <div class="eyebrow">Explore the Laboratory</div>
+        <h2 class="section-title">Experiment Modules</h2>
+        <p class="section-description">
+          Explore the three core thermodynamics topics.
+        </p>
+      </div>
+    </div>
+
+    <div class="module-grid">
+
+      <a href="index.html" class="module-card"
+         style="--glow:#65a8ff">
+        <div class="module-icon">🌡️</div>
+        <h3>Gas Laws</h3>
+        <p>
+          Investigate the relationship between pressure, volume,
+          and temperature in a gas system.
+        </p>
+        <div class="module-action">Explore experiment →</div>
+      </a>
+
+      <a href="index.html" class="module-card"
+         style="--glow:#ffad66">
+        <div class="module-icon">🔥</div>
+        <h3>Phase Change</h3>
+        <p>
+          Explore how matter responds to heat and observe
+          transitions between different physical states.
+        </p>
+        <div class="module-action">Explore experiment →</div>
+      </a>
+
+      <a href="index.html" class="module-card"
+         style="--glow:#a78bfa">
+        <div class="module-icon">⚡</div>
+        <h3>First Law of Thermodynamics</h3>
+        <p>
+          Understand the relationship between heat, work,
+          and changes in a system's internal energy.
+        </p>
+        <div class="module-action">Explore experiment →</div>
+      </a>
+
+    </div>
+  </section>
+
+
+  <!-- QUICK ACCESS -->
+
+  <section class="quick-access">
+    <div class="eyebrow">Resources</div>
+    <h2 class="section-title">Quick Access</h2>
+    <p class="section-description">
+      Find the information you need to get started.
+    </p>
+
+    <div class="quick-grid">
+
+      <a href="tutorial.html" class="quick-card">
+        <div class="quick-icon">📖</div>
+        <div>
+          <strong>User Tutorial</strong>
+          <small>Learn how to use the laboratory</small>
+        </div>
+      </a>
+
+      <a href="references.html" class="quick-card">
+        <div class="quick-icon">📚</div>
+        <div>
+          <strong>References</strong>
+          <small>Scientific and technical sources</small>
+        </div>
+      </a>
+
+      <a href="about.html" class="quick-card">
+        <div class="quick-icon">ℹ️</div>
+        <div>
+          <strong>About the Project</strong>
+          <small>Project background and objectives</small>
+        </div>
+      </a>
+
+      <a href="credits.html" class="quick-card">
+        <div class="quick-icon">✦</div>
+        <div>
+          <strong>Credits</strong>
+          <small>Contributors and acknowledgments</small>
+        </div>
+      </a>
+
+      <a href="disclaimer.html" class="quick-card">
+        <div class="quick-icon">⚠️</div>
+        <div>
+          <strong>Disclaimer</strong>
+          <small>Educational use and limitations</small>
+        </div>
+      </a>
+
+      <a href="index.html" class="quick-card">
+        <div class="quick-icon">🧪</div>
+        <div>
+          <strong>Open Simulation</strong>
+          <small>Enter the interactive laboratory</small>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+
+  <!-- PROJECT OVERVIEW -->
+
+  <section class="overview">
+
+    <div class="overview-panel">
+      <div class="eyebrow">About the Laboratory</div>
+      <h2 class="section-title">Learning Through Experimentation</h2>
+
+      <p>
+        Thermo Lab 3D is an educational simulation platform designed
+        to help learners explore fundamental concepts in
+        thermodynamics through interactive visual experiences.
+      </p>
+
+      <p>
+        Instead of relying exclusively on equations and static
+        illustrations, the platform allows users to manipulate
+        experimental variables and observe how a system responds.
+      </p>
+    </div>
+
+    <div class="overview-panel">
+      <div class="eyebrow">Learning Objectives</div>
+      <h2 class="section-title">What You'll Explore</h2>
+
+      <div class="objectives">
+        <div class="objective">
+          <span>✓</span>
+          Understand fundamental thermodynamic relationships.
+        </div>
+
+        <div class="objective">
+          <span>✓</span>
+          Observe how changing variables affects physical systems.
+        </div>
+
+        <div class="objective">
+          <span>✓</span>
+          Connect mathematical equations with visual representations.
+        </div>
+
+        <div class="objective">
+          <span>✓</span>
+          Develop scientific observation and reasoning skills.
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</div>
+</main>
+
+
+<footer>
+  <div class="container">
+    <strong>THERMO LAB 3D</strong><br>
+    Interactive Thermodynamics Laboratory<br>
+    Academic Year 2026–2027<br>
+    Educational project
+  </div>
+</footer>
+
+
+<script>
+const menuButton = document.getElementById("menuButton");
+const navBackdrop = document.getElementById("navBackdrop");
+const navDrawer = document.getElementById("navDrawer");
+
+function openMenu() {
+  document.body.classList.add("nav-open");
+  menuButton.setAttribute("aria-expanded", "true");
+  menuButton.setAttribute("aria-label", "Close navigation");
+  menuButton.textContent = "×";
+}
+
+function closeMenu() {
+  document.body.classList.remove("nav-open");
+  menuButton.setAttribute("aria-expanded", "false");
+  menuButton.setAttribute("aria-label", "Open navigation");
+  menuButton.textContent = "☰";
+}
+
+menuButton.addEventListener("click", () => {
+  document.body.classList.contains("nav-open")
+    ? closeMenu()
+    : openMenu();
+});
+
+navBackdrop.addEventListener("click", closeMenu);
+
+navDrawer.querySelectorAll("a").forEach(link => {
+  link.addEventListener("click", closeMenu);
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeMenu();
+});
+</script>
+
+</body>
+</html>
