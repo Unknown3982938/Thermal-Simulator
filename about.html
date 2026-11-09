@@ -1,0 +1,567 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080d18">
+
+<title>About | Thermodynamics Laboratory</title>
+
+<style>
+:root {
+    --bg: #080d18;
+    --panel: rgba(17, 28, 46, 0.78);
+    --border: rgba(120, 180, 220, 0.17);
+    --text: #e5edf7;
+    --muted: #91a3ba;
+    --cyan: #55d9f5;
+    --blue: #438bff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(ellipse at 15% 10%, rgba(30, 100, 180, .17), transparent 45%),
+        radial-gradient(ellipse at 85% 70%, rgba(0, 180, 210, .09), transparent 40%),
+        linear-gradient(145deg, #080d18, #0b1423 55%, #080d18);
+    color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif;
+    line-height: 1.7;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: .13;
+    background-image:
+        linear-gradient(rgba(110, 180, 220, .12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(110, 180, 220, .12) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+/* NAVIGATION */
+
+nav {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 7%;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8, 13, 24, .7);
+    backdrop-filter: blur(16px);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.brand-icon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(85, 217, 245, .4);
+    border-radius: 9px;
+    color: var(--cyan);
+    background: rgba(85, 217, 245, .08);
+    font-size: 18px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    transition: .2s;
+}
+
+.nav-links a:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+    background: rgba(85, 217, 245, .07);
+}
+
+/* MAIN */
+
+main {
+    width: min(900px, 88%);
+    margin: 75px auto 90px;
+    position: relative;
+    z-index: 1;
+}
+
+.eyebrow {
+    color: var(--cyan);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+
+h1 {
+    font-size: clamp(34px, 6vw, 54px);
+    line-height: 1.15;
+    letter-spacing: -1.5px;
+    margin-bottom: 18px;
+}
+
+h1 span {
+    color: var(--cyan);
+}
+
+.intro {
+    max-width: 680px;
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 45px;
+}
+
+.section-label {
+    color: var(--cyan);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin: 30px 0 12px;
+}
+
+/* CARDS */
+
+.card {
+    padding: 25px 27px;
+    margin-bottom: 15px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    backdrop-filter: blur(12px);
+    transition: border-color .2s, transform .2s;
+}
+
+.card:hover {
+    border-color: rgba(85, 217, 245, .38);
+    transform: translateY(-2px);
+}
+
+.card h2 {
+    font-size: 17px;
+    margin-bottom: 9px;
+    font-weight: 650;
+}
+
+.card p {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.card p + p {
+    margin-top: 10px;
+}
+
+/* MODULES */
+
+.modules {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 13px;
+}
+
+.module {
+    padding: 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: .2s;
+}
+
+.module:hover {
+    border-color: rgba(85, 217, 245, .4);
+    transform: translateY(-2px);
+}
+
+.module-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    color: var(--cyan);
+    background: rgba(85, 217, 245, .09);
+    border: 1px solid rgba(85, 217, 245, .18);
+    font-size: 19px;
+    margin-bottom: 15px;
+}
+
+.module h3 {
+    font-size: 14px;
+    margin-bottom: 7px;
+}
+
+.module p {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* TECHNOLOGIES */
+
+.tech-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 15px;
+}
+
+.tech {
+    font-size: 11px;
+    color: var(--cyan);
+    padding: 7px 12px;
+    border-radius: 7px;
+    border: 1px solid rgba(85, 217, 245, .2);
+    background: rgba(85, 217, 245, .06);
+}
+
+/* PROJECT INFORMATION */
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.info-item {
+    padding: 16px;
+    background: rgba(8, 13, 24, .35);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+}
+
+.info-item small {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.info-item strong {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* FOOTER */
+
+footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 25px 15px;
+    border-top: 1px solid var(--border);
+    color: #63758b;
+    font-size: 11px;
+    letter-spacing: .5px;
+}
+
+footer span {
+    color: var(--cyan);
+}
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+    nav {
+        padding: 16px 6%;
+    }
+
+    .brand {
+        font-size: 11px;
+        letter-spacing: 1px;
+    }
+
+    .nav-links {
+        gap: 6px;
+    }
+
+    .nav-links a {
+        font-size: 11px;
+        padding: 7px 9px;
+    }
+
+    main {
+        width: 88%;
+        margin: 50px auto 65px;
+    }
+
+    .modules {
+        grid-template-columns: 1fr;
+    }
+
+    .module {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .module-icon {
+        flex-shrink: 0;
+        margin-bottom: 0;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+    <div class="brand">
+        <div class="brand-icon">⌬</div>
+        <span>THERMODYNAMICS LAB</span>
+    </div>
+
+    <div class="nav-links">
+        <a href="index.html">← Laboratory</a>
+        <a href="disclaimer.html">Disclaimer</a>
+    </div>
+</nav>
+
+<main>
+
+    <div class="eyebrow">Documentation / Project Information</div>
+
+    <h1>About the <span>Project.</span></h1>
+
+    <p class="intro">
+        An interactive digital laboratory designed to explore
+        fundamental thermodynamic concepts through visualization,
+        experimentation, and mathematical relationships.
+    </p>
+
+    <!-- PROJECT OVERVIEW -->
+
+    <div class="section-label">01 — OVERVIEW</div>
+
+    <section class="card">
+        <h2>What is Thermodynamics Laboratory?</h2>
+
+        <p>
+            Thermodynamics Laboratory is an interactive educational
+            simulation that allows users to explore selected
+            thermodynamic principles through a digital environment.
+        </p>
+
+        <p>
+            Instead of relying entirely on static diagrams and
+            theoretical explanations, the project uses animated
+            visual representations and adjustable parameters to
+            demonstrate how physical quantities interact.
+        </p>
+
+        <p>
+            Users can manipulate simulation controls, observe
+            changes in the system, and develop an intuitive
+            understanding of the concepts being demonstrated.
+        </p>
+    </section>
+
+    <!-- OBJECTIVES -->
+
+    <div class="section-label">02 — OBJECTIVES</div>
+
+    <section class="card">
+        <h2>Project Objectives</h2>
+
+        <p>
+            The project aims to make selected thermodynamic
+            concepts more accessible through interactive
+            visualization.
+        </p>
+
+        <ul style="margin:12px 0 0 20px;color:var(--muted);font-size:13px">
+            <li>Demonstrate fundamental thermodynamic relationships.</li>
+            <li>Visualize particle behavior and changes in physical states.</li>
+            <li>Allow users to explore variables through interactive controls.</li>
+            <li>Connect mathematical concepts with visual observations.</li>
+            <li>Encourage experimentation and independent learning.</li>
+        </ul>
+    </section>
+
+    <!-- SIMULATION MODULES -->
+
+    <div class="section-label">03 — SIMULATION MODULES</div>
+
+    <div class="modules">
+
+        <div class="module">
+            <div class="module-icon">◉</div>
+            <div>
+                <h3>Gas Laws</h3>
+                <p>
+                    Explore the relationships between gas pressure,
+                    volume, and temperature through particle
+                    visualization and adjustable parameters.
+                </p>
+            </div>
+        </div>
+
+        <div class="module">
+            <div class="module-icon">❄</div>
+            <div>
+                <h3>Phase Change</h3>
+                <p>
+                    Observe changes in particle arrangement and
+                    movement as a substance transitions between
+                    different physical states.
+                </p>
+            </div>
+        </div>
+
+        <div class="module">
+            <div class="module-icon">Δ</div>
+            <div>
+                <h3>First Law</h3>
+                <p>
+                    Explore the relationship between heat,
+                    internal energy, and work in a thermodynamic
+                    system.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TECHNOLOGY -->
+
+    <div class="section-label">04 — TECHNOLOGY</div>
+
+    <section class="card">
+        <h2>Development Technologies</h2>
+
+        <p>
+            The application is built using web technologies
+            that allow it to operate directly inside a modern
+            web browser without requiring a traditional
+            installation process.
+        </p>
+
+        <div class="tech-list">
+            <span class="tech">HTML5</span>
+            <span class="tech">CSS3</span>
+            <span class="tech">JavaScript</span>
+            <span class="tech">Three.js</span>
+            <span class="tech">WebGL</span>
+            <span class="tech">GitHub Pages</span>
+            <span class="tech">GitHub Actions</span>
+        </div>
+    </section>
+
+    <!-- PROJECT DETAILS -->
+
+    <div class="section-label">05 — PROJECT DETAILS</div>
+
+    <section class="card">
+        <h2>Project Information</h2>
+
+        <div class="info-grid">
+
+            <div class="info-item">
+                <small>Project Title</small>
+                <strong>Thermodynamics Laboratory</strong>
+            </div>
+
+            <div class="info-item">
+                <small>Project Category</small>
+                <strong>Educational Simulation</strong>
+            </div>
+
+            <div class="info-item">
+                <small>School / Institution</small>
+                <strong>[School Name]</strong>
+            </div>
+
+            <div class="info-item">
+                <small>Academic Year</small>
+                <strong>2026–2027</strong>
+            </div>
+
+            <div class="info-item">
+                <small>Project Author(s)</small>
+                <strong>[Author Name(s)]</strong>
+            </div>
+
+            <div class="info-item">
+                <small>Subject / Course</small>
+                <strong>[Subject Name]</strong>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ACKNOWLEDGMENTS -->
+
+    <div class="section-label">06 — ACKNOWLEDGMENTS</div>
+
+    <section class="card">
+        <h2>Credits and Acknowledgments</h2>
+
+        <p>
+            This project makes use of open-source technologies
+            and publicly available educational resources to
+            support its development.
+        </p>
+
+        <p>
+            Special acknowledgment is given to the developers
+            and contributors of the libraries and tools used
+            in this application, particularly Three.js.
+        </p>
+
+        <p>
+            Additional acknowledgments:
+            [Teachers, advisers, contributors, or institutions]
+        </p>
+    </section>
+
+</main>
+
+<footer>
+    <span>THERMODYNAMICS LAB</span>
+    <p>Interactive Educational Simulation</p>
+    <p style="margin-top:5px">
+        © 2026–2027 — Project Information
+    </p>
+</footer>
+
+</body>
+</html>
