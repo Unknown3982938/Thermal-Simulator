@@ -1,0 +1,736 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080d18">
+
+<title>User Guide | Thermodynamics Laboratory</title>
+
+<style>
+:root {
+    --bg: #080d18;
+    --panel: rgba(17, 28, 46, 0.78);
+    --border: rgba(120, 180, 220, 0.17);
+    --text: #e5edf7;
+    --muted: #91a3ba;
+    --cyan: #55d9f5;
+    --blue: #438bff;
+    --green: #62e6b0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(ellipse at 15% 10%, rgba(30, 100, 180, .17), transparent 45%),
+        radial-gradient(ellipse at 85% 70%, rgba(0, 180, 210, .09), transparent 40%),
+        linear-gradient(145deg, #080d18, #0b1423 55%, #080d18);
+    color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif;
+    line-height: 1.7;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: .13;
+    background-image:
+        linear-gradient(rgba(110, 180, 220, .12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(110, 180, 220, .12) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+/* NAVIGATION */
+
+nav {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 7%;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8, 13, 24, .7);
+    backdrop-filter: blur(16px);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.brand-icon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(85, 217, 245, .4);
+    border-radius: 9px;
+    color: var(--cyan);
+    background: rgba(85, 217, 245, .08);
+    font-size: 18px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    transition: .2s;
+}
+
+.nav-links a:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+    background: rgba(85, 217, 245, .07);
+}
+
+/* MAIN */
+
+main {
+    width: min(900px, 88%);
+    margin: 65px auto 90px;
+    position: relative;
+    z-index: 1;
+}
+
+.eyebrow {
+    color: var(--cyan);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+
+h1 {
+    font-size: clamp(34px, 6vw, 54px);
+    line-height: 1.15;
+    letter-spacing: -1.5px;
+    margin-bottom: 18px;
+}
+
+h1 span {
+    color: var(--cyan);
+}
+
+.intro {
+    max-width: 680px;
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 38px;
+}
+
+.section-label {
+    color: var(--cyan);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin: 34px 0 13px;
+}
+
+/* TABLE OF CONTENTS */
+
+.contents {
+    padding: 23px 25px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    margin-bottom: 35px;
+}
+
+.contents h2 {
+    font-size: 15px;
+    margin-bottom: 13px;
+}
+
+.contents-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 20px;
+}
+
+.contents a {
+    color: var(--muted);
+    font-size: 12px;
+    text-decoration: none;
+    transition: .2s;
+}
+
+.contents a:hover {
+    color: var(--cyan);
+}
+
+/* CONTENT CARDS */
+
+.card {
+    padding: 25px 27px;
+    margin-bottom: 15px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    backdrop-filter: blur(12px);
+    transition: border-color .2s;
+    scroll-margin-top: 25px;
+}
+
+.card:hover {
+    border-color: rgba(85, 217, 245, .35);
+}
+
+.card h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.card h3 {
+    font-size: 14px;
+    margin: 19px 0 7px;
+    color: var(--cyan);
+}
+
+.card p {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.card ul,
+.card ol {
+    margin: 12px 0 0 20px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.card li {
+    padding: 4px 0;
+}
+
+.step-number {
+    display: inline-grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    margin-right: 7px;
+    border-radius: 7px;
+    background: rgba(85, 217, 245, .1);
+    border: 1px solid rgba(85, 217, 245, .2);
+    color: var(--cyan);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* MODE CARDS */
+
+.mode-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 13px;
+}
+
+.mode {
+    padding: 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.mode-icon {
+    display: grid;
+    place-items: center;
+    width: 39px;
+    height: 39px;
+    margin-bottom: 13px;
+    color: var(--cyan);
+    background: rgba(85, 217, 245, .09);
+    border: 1px solid rgba(85, 217, 245, .2);
+    border-radius: 10px;
+    font-size: 19px;
+}
+
+.mode h3 {
+    font-size: 14px;
+    margin-bottom: 7px;
+}
+
+.mode p {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* CALLOUT */
+
+.callout {
+    display: flex;
+    gap: 14px;
+    padding: 19px;
+    margin: 18px 0;
+    background: rgba(85, 217, 245, .055);
+    border: 1px solid rgba(85, 217, 245, .2);
+    border-radius: 11px;
+}
+
+.callout-icon {
+    color: var(--cyan);
+    font-size: 20px;
+}
+
+.callout p {
+    font-size: 12px;
+}
+
+/* FORMULA */
+
+.formula {
+    padding: 16px;
+    margin: 15px 0;
+    text-align: center;
+    background: rgba(5, 12, 24, .55);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--cyan);
+    font-family: "Courier New", monospace;
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+/* FOOTER */
+
+footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 25px 15px;
+    border-top: 1px solid var(--border);
+    color: #63758b;
+    font-size: 11px;
+}
+
+footer span {
+    color: var(--cyan);
+}
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+    nav {
+        padding: 16px 6%;
+    }
+
+    .brand {
+        font-size: 10px;
+        letter-spacing: 1px;
+    }
+
+    .nav-links {
+        gap: 5px;
+    }
+
+    .nav-links a {
+        font-size: 10px;
+        padding: 7px 8px;
+    }
+
+    main {
+        width: 88%;
+        margin: 48px auto 65px;
+    }
+
+    .mode-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .contents-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .formula {
+        font-size: 15px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+    <div class="brand">
+        <div class="brand-icon">⌬</div>
+        <span>THERMODYNAMICS LAB</span>
+    </div>
+
+    <div class="nav-links">
+        <a href="index.html">← Laboratory</a>
+        <a href="about.html">About</a>
+    </div>
+</nav>
+
+<main>
+
+    <div class="eyebrow">Documentation / User Manual</div>
+
+    <h1>Laboratory <span>Guide.</span></h1>
+
+    <p class="intro">
+        Learn how to navigate the Thermodynamics Laboratory,
+        operate its simulation controls, and explore the
+        physical principles demonstrated in each experimental mode.
+    </p>
+
+    <!-- CONTENTS -->
+
+    <div class="contents">
+        <h2>Guide Contents</h2>
+
+        <div class="contents-grid">
+            <a href="#getting-started">01. Getting Started</a>
+            <a href="#interface">02. Interface Overview</a>
+            <a href="#gas-laws">03. Gas Laws</a>
+            <a href="#phase-change">04. Phase Change</a>
+            <a href="#first-law">05. First Law</a>
+            <a href="#experiments">06. Experiment Tips</a>
+            <a href="#troubleshooting">07. Troubleshooting</a>
+        </div>
+    </div>
+
+    <!-- GETTING STARTED -->
+
+    <div class="section-label" id="getting-started">
+        01 — GETTING STARTED
+    </div>
+
+    <section class="card">
+        <h2>Opening the Laboratory</h2>
+
+        <p>
+            The Thermodynamics Laboratory runs directly inside
+            a compatible web browser. No conventional software
+            installation is required.
+        </p>
+
+        <ol>
+            <li>Open the project's published website.</li>
+            <li>Wait for the simulation interface to finish loading.</li>
+            <li>Select the desired experimental mode.</li>
+            <li>Adjust the available controls to observe changes.</li>
+        </ol>
+
+        <div class="callout">
+            <div class="callout-icon">ⓘ</div>
+            <p>
+                An active internet connection may be required
+                to load external libraries used by the simulation.
+            </p>
+        </div>
+    </section>
+
+    <!-- INTERFACE -->
+
+    <div class="section-label" id="interface">
+        02 — INTERFACE OVERVIEW
+    </div>
+
+    <section class="card">
+        <h2>Understanding the Interface</h2>
+
+        <p>
+            The simulation interface is organized into separate
+            visual and control areas.
+        </p>
+
+        <h3>3D Simulation Viewport</h3>
+        <p>
+            Displays the simulated thermodynamic system,
+            including the container, particles, piston,
+            and other visual elements.
+        </p>
+
+        <h3>Control Panel</h3>
+        <p>
+            Contains interactive controls for changing
+            simulation parameters and selecting experimental
+            configurations.
+        </p>
+
+        <h3>Information Display</h3>
+        <p>
+            Presents numerical values and other information
+            associated with the current simulation.
+        </p>
+
+        <h3>Simulation Controls</h3>
+        <p>
+            Use the available buttons and sliders to modify
+            parameters and observe the resulting behavior.
+            Available controls may differ between modes.
+        </p>
+    </section>
+
+    <!-- MODES -->
+
+    <div class="section-label">03 — EXPERIMENTAL MODES</div>
+
+    <div class="mode-grid">
+
+        <div class="mode" id="gas-laws">
+            <div class="mode-icon">◉</div>
+
+            <h3>Gas Laws</h3>
+
+            <p>
+                Explore how pressure, volume, and temperature
+                relate to the behavior of a gas.
+            </p>
+
+            <h3>What to observe</h3>
+
+            <p>
+                Observe particle movement and how changing
+                the system's parameters affects the displayed
+                physical quantities.
+            </p>
+        </div>
+
+        <div class="mode" id="phase-change">
+            <div class="mode-icon">❄</div>
+
+            <h3>Phase Change</h3>
+
+            <p>
+                Explore how particle movement and arrangement
+                change as a substance transitions between
+                physical states.
+            </p>
+
+            <h3>What to observe</h3>
+
+            <p>
+                Observe differences in particle organization
+                and movement during changes in temperature
+                and physical state.
+            </p>
+        </div>
+
+        <div class="mode" id="first-law">
+            <div class="mode-icon">Δ</div>
+
+            <h3>First Law</h3>
+
+            <p>
+                Explore the relationship between heat,
+                work, and internal energy in a thermodynamic
+                system.
+            </p>
+
+            <h3>What to observe</h3>
+
+            <p>
+                Observe how energy transfer and work relate
+                to changes in the system's internal energy.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- GAS LAWS DETAILS -->
+
+    <section class="card" style="margin-top:15px">
+        <h2>Gas Laws: Basic Relationships</h2>
+
+        <p>
+            Gas behavior can be described through relationships
+            between pressure, volume, and absolute temperature.
+        </p>
+
+        <div class="formula">
+            PV = nRT
+        </div>
+
+        <ul>
+            <li><strong>P</strong> — Pressure</li>
+            <li><strong>V</strong> — Volume</li>
+            <li><strong>n</strong> — Amount of substance</li>
+            <li><strong>R</strong> — Ideal gas constant</li>
+            <li><strong>T</strong> — Absolute temperature</li>
+        </ul>
+
+        <p style="margin-top:14px">
+            This is the ideal gas equation. It describes
+            the relationship among these variables under
+            the assumptions of the ideal gas model.
+        </p>
+    </section>
+
+    <!-- PHASE CHANGE DETAILS -->
+
+    <section class="card">
+        <h2>Phase Change: Understanding States of Matter</h2>
+
+        <p>
+            Matter can exist in different physical states.
+            Changes in energy and temperature can influence
+            particle movement and arrangement.
+        </p>
+
+        <ul>
+            <li><strong>Solid:</strong> Particles remain organized around relatively fixed positions.</li>
+            <li><strong>Liquid:</strong> Particles remain close together but can move around one another.</li>
+            <li><strong>Gas:</strong> Particles move more freely and occupy the available space.</li>
+        </ul>
+
+        <div class="callout">
+            <div class="callout-icon">ⓘ</div>
+            <p>
+                During a phase transition of a pure substance
+                at constant pressure, energy transfer can
+                change its physical state without changing
+                its temperature.
+            </p>
+        </div>
+    </section>
+
+    <!-- FIRST LAW DETAILS -->
+
+    <section class="card">
+        <h2>First Law: Conservation of Energy</h2>
+
+        <p>
+            The first law of thermodynamics describes how
+            energy is conserved in a thermodynamic system.
+        </p>
+
+        <div class="formula">
+            ΔU = Q − W
+        </div>
+
+        <ul>
+            <li><strong>ΔU</strong> — Change in internal energy</li>
+            <li><strong>Q</strong> — Heat added to the system</li>
+            <li><strong>W</strong> — Work done by the system</li>
+        </ul>
+
+        <p style="margin-top:14px">
+            This equation uses the convention that heat
+            entering the system is positive and work done
+            by the system is positive.
+        </p>
+    </section>
+
+    <!-- EXPERIMENT TIPS -->
+
+    <div class="section-label" id="experiments">
+        06 — EXPERIMENT TIPS
+    </div>
+
+    <section class="card">
+        <h2>Getting Better Results</h2>
+
+        <ol>
+            <li>Start with the default simulation settings.</li>
+            <li>Identify which physical quantity you want to investigate.</li>
+            <li>Change one parameter at a time when studying its effect.</li>
+            <li>Observe the visual changes and numerical readings.</li>
+            <li>Compare the results with the relevant thermodynamic principle.</li>
+            <li>Repeat the experiment using different parameter values.</li>
+        </ol>
+
+        <div class="callout">
+            <div class="callout-icon">✦</div>
+            <p>
+                Try to predict what will happen before changing
+                a parameter. Comparing your prediction with
+                the simulation's response makes the experiment
+                more useful.
+            </p>
+        </div>
+    </section>
+
+    <!-- TROUBLESHOOTING -->
+
+    <div class="section-label" id="troubleshooting">
+        07 — TROUBLESHOOTING
+    </div>
+
+    <section class="card">
+        <h2>Common Issues</h2>
+
+        <h3>Simulation does not load</h3>
+        <p>
+            Check your internet connection and reload the page.
+            External libraries may not have loaded successfully.
+        </p>
+
+        <h3>3D graphics are missing</h3>
+        <p>
+            Make sure your browser supports WebGL and that
+            hardware acceleration is available.
+        </p>
+
+        <h3>Controls do not respond</h3>
+        <p>
+            Reload the simulation and check whether the
+            interface has finished initializing.
+        </p>
+
+        <h3>Performance is slow</h3>
+        <p>
+            Close unnecessary browser tabs and applications.
+            Performance may vary depending on your device's
+            graphics capabilities.
+        </p>
+    </section>
+
+    <!-- FINAL NOTE -->
+
+    <section class="card">
+        <h2>Final Note</h2>
+
+        <p>
+            The Thermodynamics Laboratory is intended to
+            supplement the study of thermodynamics through
+            interactive visualization. Always refer to
+            established scientific materials when performing
+            detailed calculations or interpreting experimental
+            results.
+        </p>
+    </section>
+
+</main>
+
+<footer>
+    <span>THERMODYNAMICS LAB</span>
+    <p>Interactive Educational Simulation</p>
+    <p style="margin-top:5px">© 2026–2027 — User Documentation</p>
+</footer>
+
+</body>
+</html>
