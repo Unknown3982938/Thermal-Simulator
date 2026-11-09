@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f7fb">
+  <title>Thermodynamics Lab — Interactive Heat Transfer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-mark">Δ</div>
+  <div><div class="eyebrow">INTERACTIVE PHYSICS LAB</div><h1>Thermodynamics Lab</h1></div>
+  <div class="top-spacer"></div>
+  <span class="status"><i></i> LOCAL SIMULATION</span>
+</header>
+
+<main>
+  <section class="intro">
+    <div>
+      <div class="eyebrow">HEAT TRANSFER · KINETIC THEORY · FIRST LAW</div>
+      <h2>Explore how energy changes matter.</h2>
+      <p>Add or remove heat, watch particles respond, and connect microscopic motion to measurable thermodynamic properties.</p>
+    </div>
+    <div class="law-card"><span>FIRST LAW OF THERMODYNAMICS</span><strong>ΔU = Q − W</strong><small>Change in internal energy = heat added − work done by the system</small></div>
+  </section>
+
+  <nav class="tabs" aria-label="Simulation modes">
+    <button class="tab active" data-mode="heating">01 <span>Heating &amp; phase change</span></button>
+    <button class="tab" data-mode="gas">02 <span>Gas behavior</span></button>
+    <button class="tab" data-mode="energy">03 <span>Energy accounting</span></button>
+  </nav>
+
+  <section class="workspace">
+    <div class="visual-panel panel">
+      <div class="panel-heading">
+        <div><div class="eyebrow">MICROSCOPIC VIEW</div><h3 id="scene-title">Particle model</h3></div>
+        <span class="live-pill"><i></i> LIVE</span>
+      </div>
+      <div class="canvas-wrap"><canvas id="particleCanvas" aria-label="Animated particle simulation"></canvas>
+        <div class="canvas-label" id="phase-label">SOLID</div>
+        <div class="canvas-hint">Illustrative particle model · Not to scale</div>
+      </div>
+      <div class="playback">
+        <button id="playBtn" class="primary">Ⅱ Pause</button>
+        <button id="resetBtn" class="secondary">↺ Reset</button>
+        <div class="playback-note" id="run-state">Simulation running</div>
+      </div>
+    </div>
+
+    <aside class="controls panel">
+      <div class="panel-heading"><div><div class="eyebrow">EXPERIMENT CONTROLS</div><h3>Adjust the system</h3></div></div>
+      <div id="heating-controls" class="control-set">
+        <label class="control-label" for="heatRate">Heater power <output id="heatRateOut">40 W</output></label>
+        <input id="heatRate" type="range" min="-100" max="100" value="40" step="5">
+        <div class="range-ends"><span>Cooling</span><span>Heating</span></div>
+        <label class="control-label" for="material">Substance</label>
+        <select id="material"><option value="water">Water (simplified)</option><option value="ethanol">Ethanol (illustrative)</option><option value="custom">Generic material</option></select>
+        <div class="info-note">The model uses simplified phase-change thresholds and heat capacities for teaching. It is not a laboratory prediction tool.</div>
+      </div>
+      <div id="gas-controls" class="control-set hidden">
+        <label class="control-label" for="gasHeat">Heat input <output id="gasHeatOut">25 W</output></label>
+        <input id="gasHeat" type="range" min="-50" max="100" value="25" step="5">
+        <label class="control-label" for="volume">Container volume <output id="volumeOut">10.0 L</output></label>
+        <input id="volume" type="range" min="5" max="20" value="10" step=".5">
+        <label class="control-label" for="piston">Piston setting <output id="pistonOut">Free</output></label>
+        <select id="piston"><option value="free">Free piston (volume can change)</option><option value="fixed">Fixed volume</option></select>
+        <div class="info-note">Ideal-gas approximation: particles are treated as point-like and intermolecular forces are ignored.</div>
+      </div>
+      <div id="energy-controls" class="control-set hidden">
+        <label class="control-label" for="energyHeat">Heat transferred, Q <output id="energyHeatOut">500 J</output></label>
+        <input id="energyHeat" type="range" min="-1000" max="2000" value="500" step="50">
+        <label class="control-label" for="work">Work done by system, W <output id="workOut">100 J</output></label>
+        <input id="work" type="range" min="-1000" max="1000" value="100" step="50">
+        <div class="equation-box"><span>FIRST LAW</span><strong>ΔU = Q − W</strong><small>Positive W means the system does work on its surroundings.</small></div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="metrics-grid">
+    <article class="metric panel"><span class="metric-name">TEMPERATURE</span><strong id="temperature">20.0 <small>°C</small></strong><span class="metric-sub" id="temp-sub">Average particle kinetic energy</span></article>
+    <article class="metric panel"><span class="metric-name">INTERNAL ENERGY</span><strong id="internalEnergy">4.2 <small>kJ</small></strong><span class="metric-sub">Stored microscopic energy</span></article>
+    <article class="metric panel"><span class="metric-name">PHASE / STATE</span><strong id="phase">Solid</strong><span class="metric-sub" id="phase-sub">Particles vibrate around fixed positions</span></article>
+    <article class="metric panel"><span class="metric-name" id="extra-name">ENERGY ADDED</span><strong id="extra-value">0 <small>J</small></strong><span class="metric-sub" id="extra-sub">Net heat transferred</span></article>
+  </section>
+
+  <section class="lower-grid">
+    <article class="panel graph-panel">
+      <div class="panel-heading"><div><div class="eyebrow">THERMAL RESPONSE</div><h3 id="graph-title">Heating curve</h3></div><span class="chart-key"><i></i> Temperature</span></div>
+      <canvas id="chartCanvas" height="190"></canvas>
+      <div class="graph-caption" id="graph-caption">Temperature rises during sensible heating and plateaus during a phase transition.</div>
+    </article>
+    <article class="panel explanation">
+      <div class="eyebrow">WHAT'S HAPPENING?</div>
+      <h3 id="explain-title">Sensible heat</h3>
+      <p id="explain-text">When heat enters a substance without changing its phase, its internal energy increases. In this simplified model, the average particle kinetic energy rises, so temperature increases.</p>
+      <div class="formula" id="formula">Q = mcΔT</div>
+      <small id="formula-note">Q = heat · m = mass · c = specific heat capacity · ΔT = temperature change</small>
+    </article>
+  </section>
+  <footer>Educational model · Simplified assumptions · Use the controls to investigate cause and effect.</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
