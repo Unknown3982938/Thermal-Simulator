@@ -1,105 +1,172 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f7fb">
-  <title>Thermodynamics Lab — Interactive Heat Transfer</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thermo Lab 3D</title>
+<style>
+:root{--b1:#eef3ff;--b2:#b9ccf0;--glass:rgba(255,255,255,.66);--bd:rgba(40,60,100,.2);--fg:#12203a;--mut:#51637f;--a1:#ff6a2a;--a2:#ffb347;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--b1:#1b2a52;--b2:#080d1c;--glass:rgba(18,28,56,.7);--bd:rgba(160,190,255,.22);--fg:#e9f0ff;--mut:#9db0d3}}
+:root[data-theme="dark"]{--b1:#1b2a52;--b2:#080d1c;--glass:rgba(18,28,56,.7);--bd:rgba(160,190,255,.22);--fg:#e9f0ff;--mut:#9db0d3}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:radial-gradient(ellipse at 60% 30%,var(--b1),var(--b2));color:var(--fg);font:14px system-ui,-apple-system,"Segoe UI",sans-serif}
+#app{display:grid;grid-template-columns:310px 1fr;height:100%}
+aside{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-right:1px solid var(--bd);padding:16px;overflow:auto;box-shadow:6px 0 30px rgba(0,0,0,.18)}
+.brand{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.logo{font-size:26px;filter:drop-shadow(0 0 8px var(--a1))}
+h1{font-size:1.1rem;margin:0}small,.note{color:var(--mut)}
+.sec{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:16px 0 8px;display:flex;justify-content:space-between}
+.card{display:flex;gap:10px;align-items:center;width:100%;margin-bottom:8px;padding:10px 12px;border:1px solid var(--bd);border-radius:14px;background:transparent;color:var(--fg);cursor:pointer;text-align:left;transition:.2s}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.card .i{font-size:22px}.card small{display:block;color:inherit;opacity:.75}
+.card.on{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(255,106,42,.4);transform:translateX(4px)}
+select{width:100%;padding:9px;border-radius:10px;border:1px solid var(--bd);background:var(--glass);color:var(--fg);font-size:.95rem}
+.sl{margin-top:12px}.sl label{display:flex;justify-content:space-between;margin-bottom:7px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:8px;outline:none;background:linear-gradient(90deg,var(--a1),var(--a2)) 0 0/var(--p,50%) 100% no-repeat,var(--bd)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffd9c7);border:3px solid var(--a1);box-shadow:0 3px 10px rgba(0,0,0,.4),0 0 0 5px rgba(255,106,42,.18)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--a1);box-shadow:0 3px 10px rgba(0,0,0,.4)}
+.tog{display:flex;gap:6px}
+.tog button{flex:1;padding:9px 4px;border-radius:10px;border:1px solid var(--bd);background:transparent;color:var(--fg);cursor:pointer}
+.tog button.on{background:var(--a1);color:#fff;border-color:var(--a1)}
+#stage{position:relative;min-height:0;touch-action:none;cursor:grab}
+#gl{display:block;width:100%;height:100%}
+#hud{position:absolute;top:12px;right:12px;width:min(260px,calc(100% - 24px));padding:12px;border-radius:16px;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--bd);box-shadow:0 12px 30px rgba(0,0,0,.25);pointer-events:none}
+#hudt{font-family:Consolas,monospace;font-size:.8rem;white-space:pre-line;line-height:1.5}
+#hudc{width:100%;margin-top:8px}
+@media (max-width:760px){#app{grid-template-columns:1fr;grid-template-rows:44% 56%}#stage{order:1}aside{order:2;border-right:0;border-top:1px solid var(--bd)}#hud{width:170px;padding:8px}#hudt{font-size:.7rem}#hudc{display:none!important}}
+</style>
 </head>
 <body>
-<header class="topbar">
-  <div class="brand-mark">Δ</div>
-  <div><div class="eyebrow">INTERACTIVE PHYSICS LAB</div><h1>Thermodynamics Lab</h1></div>
-  <div class="top-spacer"></div>
-  <span class="status"><i></i> LOCAL SIMULATION</span>
-</header>
+<div id="app">
+<aside>
+  <div class="brand"><span class="logo">🔥</span><div><h1>Thermo Lab 3D</h1><small>Interactive heat transfer model</small></div></div>
+  <div class="sec">Models</div><div id="cards"></div>
+  <div class="sec"><span>Parameters</span><span id="eq"></span></div>
+  <div id="optrow"><select id="opt"></select></div>
+  <div id="sl"></div>
+  <div class="sec">View</div>
+  <div class="tog"><button id="bAuto" class="on">Auto-rotate</button><button id="bPause">Pause</button><button id="bReset">Reset</button></div>
+  <p class="note">Drag to rotate, scroll to zoom.</p>
+</aside>
+<div id="stage"><div id="hud"><div id="hudt"></div><canvas id="hudc" width="480" height="260"></canvas></div></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=id=>document.getElementById(id),clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const R=8.314,KB=1.380649e-23,NA=6.022e23;
+const SUB={Water:{mp:0,bp:100,ci:2.09,cl:4.18,cg:2.01,lf:334,lv:2260},Ethanol:{mp:-114,bp:78,ci:.97,cl:2.44,cg:1.43,lf:108,lv:846}};
+const GAS={Helium:{M:.004,s:.8},Nitrogen:{M:.028,s:1},'Carbon dioxide':{M:.044,s:1.3}};
+const MODELS={
+ gas:{name:'Gas Laws',ic:'🎈',eq:'PV = nRT',opts:Object.keys(GAS),sl:[['n','Amount n (mol)',.5,5,.1,2],['T','Temperature (K)',100,1000,10,300],['V','Volume (L)',5,50,.5,25]]},
+ heat:{name:'Phase Change',ic:'🧊',eq:'Q = mcΔT · mL',opts:Object.keys(SUB),sl:[['m','Mass (kg)',.1,5,.1,1],['d','Start below melting (°C)',1,50,1,20],['q','Heat added (kJ)',0,16000,50,1000]]},
+ law:{name:'First Law',ic:'⚙️',eq:'ΔU = Q − W',opts:[],sl:[['fq','Heat in Q (kJ)',-50,50,1,30],['fw','Work by gas W (kJ)',-50,50,1,10],['fn','Gas amount n (mol)',.5,5,.1,2]]}};
+const SUBT={gas:'Gas',heat:'Substance',law:''};
+let mode='gas',opt='Nitrogen',paused=false,auto=true;const v={};
 
-<main>
-  <section class="intro">
-    <div>
-      <div class="eyebrow">HEAT TRANSFER · KINETIC THEORY · FIRST LAW</div>
-      <h2>Explore how energy changes matter.</h2>
-      <p>Add or remove heat, watch particles respond, and connect microscopic motion to measurable thermodynamic properties.</p>
-    </div>
-    <div class="law-card"><span>FIRST LAW OF THERMODYNAMICS</span><strong>ΔU = Q − W</strong><small>Change in internal energy = heat added − work done by the system</small></div>
-  </section>
+// ---------- three.js scene ----------
+const stage=$('stage'),ren=new THREE.WebGLRenderer({antialias:true,alpha:true});
+ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.domElement.id='gl';stage.prepend(ren.domElement);
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,.1,100);
+scene.add(new THREE.AmbientLight(0xffffff,.65));
+const sun=new THREE.DirectionalLight(0xffffff,.9);sun.position.set(5,8,4);scene.add(sun);
+const hl=new THREE.PointLight(0xff6a2a,0,10);hl.position.set(0,-.4,0);scene.add(hl);
+const base=new THREE.Mesh(new THREE.CylinderGeometry(3.2,3.4,.3,48),new THREE.MeshStandardMaterial({color:0x26324f,metalness:.6,roughness:.35}));base.position.y=-.15;scene.add(base);
+const heater=new THREE.Mesh(new THREE.CylinderGeometry(1.9,1.9,.06,48),new THREE.MeshStandardMaterial({color:0x331a10,emissive:0xff6a2a,emissiveIntensity:0}));heater.position.y=.03;scene.add(heater);
+const bg=new THREE.BoxGeometry(3,1,3);bg.translate(0,.5,0);
+const box=new THREE.Group();
+box.add(new THREE.Mesh(bg,new THREE.MeshPhysicalMaterial({color:0x9fd0ff,transparent:true,opacity:.13,roughness:.05,side:THREE.DoubleSide,depthWrite:false})));
+box.add(new THREE.LineSegments(new THREE.EdgesGeometry(bg),new THREE.LineBasicMaterial({color:0xbfe0ff})));scene.add(box);
+const liq=new THREE.Mesh(bg,new THREE.MeshStandardMaterial({color:0x2f8cff,transparent:true,opacity:.32,depthWrite:false}));liq.scale.set(.98,1,.98);scene.add(liq);
+const piston=new THREE.Group(),steel=new THREE.MeshStandardMaterial({color:0xc4ccd8,metalness:.85,roughness:.25});
+piston.add(new THREE.Mesh(new THREE.BoxGeometry(3.08,.18,3.08),steel));
+const rod=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,3,16),steel);rod.position.y=1.6;piston.add(rod);scene.add(piston);
+const N=150,P=[];
+for(let i=0;i<N;i++)P.push({p:new THREE.Vector3(),v:new THREE.Vector3(),u:Math.random(),l:new THREE.Vector3((i%5-2)*.26,.15+(Math.floor(i/5)%6)*.26,(Math.floor(i/30)-2)*.26)});
+const mesh=new THREE.InstancedMesh(new THREE.SphereGeometry(.075,14,14),new THREE.MeshStandardMaterial({roughness:.25,metalness:.15}),N);scene.add(mesh);
+const dum=new THREE.Object3D(),col=new THREE.Color();
+function initP(){P.forEach(o=>{if(mode==='heat')o.p.copy(o.l);else o.p.set((Math.random()-.5)*2.6,.2+Math.random()*1.5,(Math.random()-.5)*2.6);o.v.set(Math.random()-.5,Math.random()-.5,Math.random()-.5).setLength(1)})}
 
-  <nav class="tabs" aria-label="Simulation modes">
-    <button class="tab active" data-mode="heating">01 <span>Heating &amp; phase change</span></button>
-    <button class="tab" data-mode="gas">02 <span>Gas behavior</span></button>
-    <button class="tab" data-mode="energy">03 <span>Energy accounting</span></button>
-  </nav>
+// ---------- physics ----------
+function stages(){const s=SUB[opt]||SUB.Water,m=v.m,t0=s.mp-v.d,top=s.bp+50;
+ const dq=[m*s.ci*v.d,m*s.lf,m*s.cl*(s.bp-s.mp),m*s.lv,m*s.cg*50],E=[0];dq.forEach(d=>E.push(E[E.length-1]+d));
+ return{E,Tt:[t0,s.mp,s.mp,s.bp,s.bp,top]}}
+const NAMES=['Solid warming (sensible)','Melting (latent)','Liquid warming (sensible)','Boiling (latent)','Gas warming (sensible)'];
+function state(){const{E,Tt}=stages(),q=v.q;let i=4,f=1;
+ if(q<E[5]){i=0;while(q>E[i+1])i++;f=(q-E[i])/(E[i+1]-E[i])}
+ return{i,f,T:Tt[i]+(Tt[i+1]-Tt[i])*f,E,Tt}}
+const cls=(st,u)=>st.i===0?0:st.i===1?(u<st.f?1:0):st.i===2?1:st.i===3?(u<st.f?2:1):2;
 
-  <section class="workspace">
-    <div class="visual-panel panel">
-      <div class="panel-heading">
-        <div><div class="eyebrow">MICROSCOPIC VIEW</div><h3 id="scene-title">Particle model</h3></div>
-        <span class="live-pill"><i></i> LIVE</span>
-      </div>
-      <div class="canvas-wrap"><canvas id="particleCanvas" aria-label="Animated particle simulation"></canvas>
-        <div class="canvas-label" id="phase-label">SOLID</div>
-        <div class="canvas-hint">Illustrative particle model · Not to scale</div>
-      </div>
-      <div class="playback">
-        <button id="playBtn" class="primary">Ⅱ Pause</button>
-        <button id="resetBtn" class="secondary">↺ Reset</button>
-        <div class="playback-note" id="run-state">Simulation running</div>
-      </div>
-    </div>
+let curH=2.5,liqTop=0,last=0,th=.7,ph=1.15,ds=9,drag=null;
+function step(dt){
+ let n=N,Tk=300,hT=3.2,glow=0,st=null;const G=GAS[opt]||GAS.Nitrogen;
+ if(mode==='gas'){n=Math.floor(v.n*30);Tk=v.T;hT=1+(v.V-5)/45*3.2;glow=(Tk-300)/700}
+ else if(mode==='heat'){st=state();Tk=st.T+273.15;glow=clamp(v.q/3000,0,1)}
+ else{const du=v.fq-v.fw;n=Math.floor(v.fn*30);Tk=clamp(300+du*1000/(1.5*v.fn*R),100,1500);hT=2.4+v.fw*.02;glow=v.fq/50}
+ curH+=(hT-curH)*Math.min(1,6*dt);
+ let nl=0;if(st)P.forEach(o=>{if(cls(st,o.u)===1)nl++});
+ liqTop+=((nl?.25+nl/N*1.3:0)-liqTop)*Math.min(1,5*dt);
+ const sp=1.8*Math.sqrt(Tk/300)*Math.pow(.028/G.M,.35),r=.075,lim=1.5-r;
+ P.forEach((o,i)=>{const p=o.p,s=st?cls(st,o.u):2;
+  if(i<n){
+   if(s===0){const a=.015*Tk/250;p.lerp(o.l.clone().add(new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).multiplyScalar(a*2)),clamp(8*dt,0,1))}
+   else{const top=s===1?Math.max(.3,liqTop):curH-r;o.v.setLength(s===1?sp*.5:sp*(st?.8:1));p.addScaledVector(o.v,dt);
+    if(Math.abs(p.x)>lim){o.v.x*=-1;p.x=clamp(p.x,-lim,lim)}if(Math.abs(p.z)>lim){o.v.z*=-1;p.z=clamp(p.z,-lim,lim)}
+    if(s===1&&p.y>top+.05){o.v.y=-Math.abs(o.v.y);p.y-=1.5*dt}else if(p.y>top||p.y<r){o.v.y*=-1;p.y=clamp(p.y,r,Math.max(r,top))}}}
+  dum.position.copy(p);dum.scale.setScalar(i<n?G.s:0);dum.updateMatrix();mesh.setMatrixAt(i,dum.matrix);
+  if(st)col.set(s===0?0xcfeaff:s===1?0x3b8dff:0xff9a62);else col.setHSL(.62-.62*clamp((Tk-100)/900,0,1),.9,.55);
+  mesh.setColorAt(i,col)});
+ mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;
+ box.scale.y=curH;piston.position.y=curH+.09;liq.visible=mode==='heat'&&liqTop>.05;liq.scale.y=Math.max(.01,liqTop);
+ const hot=glow>=0,g=clamp(Math.abs(glow),0,1);
+ heater.material.emissive.set(hot?0xff6a2a:0x3b8dff);heater.material.emissiveIntensity=g*1.8;hl.color.set(hot?0xff6a2a:0x3b8dff);hl.intensity=g*2.2;
+ hud(st,Tk)}
 
-    <aside class="controls panel">
-      <div class="panel-heading"><div><div class="eyebrow">EXPERIMENT CONTROLS</div><h3>Adjust the system</h3></div></div>
-      <div id="heating-controls" class="control-set">
-        <label class="control-label" for="heatRate">Heater power <output id="heatRateOut">40 W</output></label>
-        <input id="heatRate" type="range" min="-100" max="100" value="40" step="5">
-        <div class="range-ends"><span>Cooling</span><span>Heating</span></div>
-        <label class="control-label" for="material">Substance</label>
-        <select id="material"><option value="water">Water (simplified)</option><option value="ethanol">Ethanol (illustrative)</option><option value="custom">Generic material</option></select>
-        <div class="info-note">The model uses simplified phase-change thresholds and heat capacities for teaching. It is not a laboratory prediction tool.</div>
-      </div>
-      <div id="gas-controls" class="control-set hidden">
-        <label class="control-label" for="gasHeat">Heat input <output id="gasHeatOut">25 W</output></label>
-        <input id="gasHeat" type="range" min="-50" max="100" value="25" step="5">
-        <label class="control-label" for="volume">Container volume <output id="volumeOut">10.0 L</output></label>
-        <input id="volume" type="range" min="5" max="20" value="10" step=".5">
-        <label class="control-label" for="piston">Piston setting <output id="pistonOut">Free</output></label>
-        <select id="piston"><option value="free">Free piston (volume can change)</option><option value="fixed">Fixed volume</option></select>
-        <div class="info-note">Ideal-gas approximation: particles are treated as point-like and intermolecular forces are ignored.</div>
-      </div>
-      <div id="energy-controls" class="control-set hidden">
-        <label class="control-label" for="energyHeat">Heat transferred, Q <output id="energyHeatOut">500 J</output></label>
-        <input id="energyHeat" type="range" min="-1000" max="2000" value="500" step="50">
-        <label class="control-label" for="work">Work done by system, W <output id="workOut">100 J</output></label>
-        <input id="work" type="range" min="-1000" max="1000" value="100" step="50">
-        <div class="equation-box"><span>FIRST LAW</span><strong>ΔU = Q − W</strong><small>Positive W means the system does work on its surroundings.</small></div>
-      </div>
-    </aside>
-  </section>
+// ---------- HUD ----------
+function hud(st,Tk){const c=$('hudc'),g=c.getContext('2d'),W=c.width,H=c.height;g.clearRect(0,0,W,H);let t='';
+ if(mode==='gas'){const G=GAS[opt];t=`Pressure  ${(v.n*R*v.T/(v.V/1000)/1000).toFixed(1)} kPa\nAvg KE    ${(1.5*KB*v.T).toExponential(2)} J\nv_rms     ${Math.sqrt(3*R*v.T/G.M).toFixed(0)} m/s\nMolecules ${(v.n*NA).toExponential(2)}`}
+ else if(mode==='heat'){const ph=['Solid','Solid + liquid','Liquid','Liquid + gas','Gas'][st.i];
+  t=`${ph}\nTemp  ${st.T.toFixed(1)} °C\nHeat  ${v.q.toFixed(0)} / ${st.E[5].toFixed(0)} kJ`+(st.i===1||st.i===3?`\nPhase change ${(st.f*100).toFixed(0)}%`:'');
+  const{E,Tt}=st,t0=Tt[0],tp=Tt[5],X=q=>30+q/E[5]*(W-45),Y=T=>H-25-(T-t0)/(tp-t0)*(H-45);
+  g.strokeStyle=css('--mut');g.lineWidth=2;g.beginPath();g.moveTo(30,10);g.lineTo(30,H-25);g.lineTo(W-10,H-25);g.stroke();
+  ['#4aa3df','#2ea84f','#1e6fd9','#2ea84f','#e05a5a'].forEach((c,i)=>{g.strokeStyle=c;g.lineWidth=5;g.beginPath();g.moveTo(X(E[i]),Y(Tt[i]));g.lineTo(X(E[i+1]),Y(Tt[i+1]));g.stroke()});
+  g.fillStyle='#ff3b30';g.beginPath();g.arc(X(Math.min(v.q,E[5])),Y(st.T),9,0,7);g.fill()}
+ else{const du=v.fq-v.fw,dT=du*1000/(1.5*v.fn*R);t=`ΔU = ${v.fq} − ${v.fw} = ${du.toFixed(1)} kJ\nGas ${du>0?'warms up':du<0?'cools down':'steady'}\nΔT = ${dT.toFixed(1)} K`;
+  [[v.fq,'#e05a5a','Q'],[v.fw,'#4aa3df','W'],[du,'#3fae6a','ΔU']].forEach(([x,c,l],i)=>{const h=x/110*(H/2-30),bx=40+i*140;g.fillStyle=c;g.fillRect(bx,h>=0?H/2-h:H/2,90,Math.abs(h));g.fillStyle=css('--fg');g.font='20px system-ui';g.fillText(l,bx+35,H-8)});
+  g.fillStyle=css('--mut');g.fillRect(20,H/2-1,W-40,2)}
+ $('hudt').textContent=t}
 
-  <section class="metrics-grid">
-    <article class="metric panel"><span class="metric-name">TEMPERATURE</span><strong id="temperature">20.0 <small>°C</small></strong><span class="metric-sub" id="temp-sub">Average particle kinetic energy</span></article>
-    <article class="metric panel"><span class="metric-name">INTERNAL ENERGY</span><strong id="internalEnergy">4.2 <small>kJ</small></strong><span class="metric-sub">Stored microscopic energy</span></article>
-    <article class="metric panel"><span class="metric-name">PHASE / STATE</span><strong id="phase">Solid</strong><span class="metric-sub" id="phase-sub">Particles vibrate around fixed positions</span></article>
-    <article class="metric panel"><span class="metric-name" id="extra-name">ENERGY ADDED</span><strong id="extra-value">0 <small>J</small></strong><span class="metric-sub" id="extra-sub">Net heat transferred</span></article>
-  </section>
+// ---------- UI ----------
+function setModel(k){mode=k;const M=MODELS[k];
+ document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',c.dataset.k===k));
+ $('eq').textContent=M.eq;$('opt').innerHTML=M.opts.map(o=>`<option>${o}</option>`).join('');
+ $('optrow').style.display=M.opts.length?'':'none';opt=M.opts[mode==='gas'?1:0]||'';$('opt').value=opt;
+ $('sl').innerHTML='';
+ M.sl.forEach(([id,lab,lo,hi,stp,df])=>{v[id]=df;const d=document.createElement('div');d.className='sl';
+  d.innerHTML=`<label><span>${lab}</span><b id="${id}_o"></b></label><input type="range" id="${id}" min="${lo}" max="${hi}" step="${stp}" value="${df}">`;
+  $('sl').appendChild(d);const el=d.querySelector('input');
+  const sync=()=>{v[id]=+el.value;el.style.setProperty('--p',(el.value-lo)/(hi-lo)*100+'%');$(id+'_o').textContent=(+el.value).toFixed(stp<1?1:0)};
+  el.oninput=sync;sync()});
+ $('hudc').style.display=k==='gas'?'none':'block';initP()}
+$('cards').innerHTML=Object.entries(MODELS).map(([k,m])=>`<button class="card" data-k="${k}"><span class="i">${m.ic}</span><span><b>${m.name}</b><small>${m.eq}</small></span></button>`).join('');
+document.querySelectorAll('.card').forEach(c=>c.onclick=()=>setModel(c.dataset.k));
+$('opt').onchange=e=>{opt=e.target.value;initP()};
+$('bAuto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto)};
+$('bPause').onclick=e=>{paused=!paused;e.target.classList.toggle('on',paused);e.target.textContent=paused?'Resume':'Pause'};
+$('bReset').onclick=()=>{setModel(mode);th=.7;ph=1.15;ds=9};
+stage.onpointerdown=e=>{drag=[e.clientX,e.clientY];stage.setPointerCapture(e.pointerId)};
+stage.onpointermove=e=>{if(!drag)return;th-=(e.clientX-drag[0])*.008;ph=clamp(ph-(e.clientY-drag[1])*.006,.25,1.5);drag=[e.clientX,e.clientY]};
+stage.onpointerup=()=>drag=null;
+stage.onwheel=e=>{e.preventDefault();ds=clamp(ds+e.deltaY*.01,5,16)};
+new ResizeObserver(()=>{const w=stage.clientWidth,h=stage.clientHeight;ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}).observe(stage);
 
-  <section class="lower-grid">
-    <article class="panel graph-panel">
-      <div class="panel-heading"><div><div class="eyebrow">THERMAL RESPONSE</div><h3 id="graph-title">Heating curve</h3></div><span class="chart-key"><i></i> Temperature</span></div>
-      <canvas id="chartCanvas" height="190"></canvas>
-      <div class="graph-caption" id="graph-caption">Temperature rises during sensible heating and plateaus during a phase transition.</div>
-    </article>
-    <article class="panel explanation">
-      <div class="eyebrow">WHAT'S HAPPENING?</div>
-      <h3 id="explain-title">Sensible heat</h3>
-      <p id="explain-text">When heat enters a substance without changing its phase, its internal energy increases. In this simplified model, the average particle kinetic energy rises, so temperature increases.</p>
-      <div class="formula" id="formula">Q = mcΔT</div>
-      <small id="formula-note">Q = heat · m = mass · c = specific heat capacity · ΔT = temperature change</small>
-    </article>
-  </section>
-  <footer>Educational model · Simplified assumptions · Use the controls to investigate cause and effect.</footer>
-</main>
-<script src="app.js"></script>
+function frame(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;
+ if(!paused)step(dt);if(auto&&!drag)th+=.12*dt;
+ const k=cam.aspect<1?1/Math.sqrt(cam.aspect):1,d=ds*k;
+ cam.position.set(d*Math.sin(ph)*Math.sin(th),1.6+d*Math.cos(ph),d*Math.sin(ph)*Math.cos(th));cam.lookAt(0,1.5,0);
+ ren.render(scene,cam);requestAnimationFrame(frame)}
+setModel('gas');requestAnimationFrame(frame);
+</script>
 </body>
 </html>
