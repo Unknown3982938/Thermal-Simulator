@@ -2,6 +2,11 @@
 (() => {
     const pages = [
         {
+            file: "dashboard.html",
+            name: "Dashboard",
+            icon: "⌂"
+        },
+        {
             file: "index.html",
             name: "Simulation",
             icon: "🧪"

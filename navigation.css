@@ -2,8 +2,10 @@
 #site-nav-toggle {
     position: fixed;
     z-index: 10002;
-    top: 16px;
-    left: 16px;
+    top: auto;
+    left: auto;
+    right: 18px;
+    bottom: 18px;
     width: 46px;
     height: 46px;
     border: 1px solid rgba(160, 190, 255, .25);
