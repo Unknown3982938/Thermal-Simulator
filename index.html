@@ -45,9 +45,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <div class="sec"><span>Parameters</span><span id="eq"></span></div>
   <div id="optrow"><select id="opt"></select></div>
   <div id="sl"></div>
-  <div id="explain" class="note">
-  Select a model to see its explanation.
-  </div>
+
+<div class="sec">Experiment Guide</div>
+<div id="explain" class="note"
+     style="padding:12px;border:1px solid var(--bd);
+     border-radius:12px;background:var(--glass);
+     line-height:1.6;font-size:.85rem">
+  Select a simulation model to see its explanation.
+</div>
   <div class="sec">View</div>
   <div class="tog"><button id="bAuto" class="on">Auto-rotate</button><button id="bPause">Pause</button><button id="bReset">Reset</button></div>
   <p class="note">Drag to rotate, scroll to zoom.</p>
@@ -164,6 +169,30 @@ stage.onpointerup=()=>drag=null;
 stage.onwheel=e=>{e.preventDefault();ds=clamp(ds+e.deltaY*.01,5,16)};
 new ResizeObserver(()=>{const w=stage.clientWidth,h=stage.clientHeight;ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}).observe(stage);
 
+  const explanations = {
+  gas: `<b>Gas Laws</b><br>
+    Explore the relationship between pressure,
+    volume, temperature, and gas quantity.<br><br>
+    <b>Equation:</b> PV = nRT<br>
+    Increasing temperature increases the average
+    kinetic energy of gas particles.`,
+
+  heat: `<b>Phase Changes</b><br>
+    Observe how adding heat changes a substance's
+    temperature and physical state.<br><br>
+    <b>Equations:</b> Q = mcΔT and Q = mL<br>
+    During a phase change, energy changes the
+    substance's state rather than its temperature.`,
+
+  law: `<b>First Law of Thermodynamics</b><br>
+    Energy cannot be created or destroyed.<br><br>
+    <b>Equation:</b> ΔU = Q − W<br>
+    Internal energy changes according to heat
+    transferred into the system and work done
+    by the system.`
+};
+
+$('explain').innerHTML = explanations[k];
 function frame(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;
  if(!paused)step(dt);if(auto&&!drag)th+=.12*dt;
  const k=cam.aspect<1?1/Math.sqrt(cam.aspect):1,d=ds*k;
