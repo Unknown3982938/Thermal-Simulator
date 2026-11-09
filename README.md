@@ -1,19 +1,44 @@
 # Thermo Lab 3D
 
-A static, browser-based thermodynamics learning project. Publish the contents of this folder at the root of your GitHub Pages site.
+A static, browser-based thermodynamics learning project built as a Physics 2 school project. Features an interactive 3D simulation, experiment journal, achievement tracking, and supporting documentation — no backend required.
+
+## Features
+
+- **Interactive 3D Simulation** — Real-time thermodynamics simulation powered by Three.js (loaded via CDN).
+- **Experiment Journal** — Take notes during experiments and export/import them as JSON.
+- **Achievements** — Locally tracked milestones as you explore.
+- **Learning Resources** — Tutorial, references, and about pages to support the project.
+- **Easter Egg** — Type `THERMO` on any page (outside a text field) or click the laboratory brand mark seven times to reveal a hidden surprise.
 
 ## Pages
-- `index.html` — interactive 3D simulation (Three.js is loaded from a CDN, so the simulation needs internet access).
-- `dashboard.html` — project landing page.
-- `journal.html` — local experiment notebook with JSON export/import.
-- `achievements.html` — locally tracked milestones.
-- `tutorial.html`, `about.html`, `references.html`, `credits.html`, `disclaimer.html` — project information.
-- `404.html` — custom not-found page.
 
-## Local data and Easter egg
-Journal entries and achievement progress are saved in the browser's `localStorage` on the current device/browser. They are not uploaded or synchronized. Clearing site data or using another browser/device may remove or separate that information. Export journal entries regularly if you want a backup.
+| Page | Description |
+|------|-------------|
+| `index.html` | Interactive 3D simulation (requires internet access for the Three.js CDN). |
+| `dashboard.html` | Project landing page. |
+| `journal.html` | Local experiment notebook with JSON export/import. |
+| `achievements.html` | Locally tracked milestones. |
+| `tutorial.html` | Tutorial and usage guide. |
+| `about.html` | Project information. |
+| `references.html` | References and sources. |
+| `credits.html` | Credits and acknowledgements. |
+| `disclaimer.html` | Disclaimer. |
+| `404.html` | Custom not-found page. |
 
-Type **THERMO** on a page (outside a text field) to reveal the hidden Easter egg. You can also click the laboratory brand mark seven times.
+## Local Data
+
+Journal entries and achievement progress are saved in the browser's `localStorage` on the current device/browser. They are **not** uploaded or synchronized. Clearing site data or switching browsers/devices may remove or separate that information — export your journal entries regularly if you want a backup.
 
 ## Deploy
-Upload the files and assets in this folder to the published root of your GitHub repository. GitHub Pages can host the project without a backend.
+
+This is a static site — GitHub Pages can host it without a backend.
+
+1. Upload the files and assets in this folder to the published root of your GitHub repository.
+2. In your repository settings, enable **GitHub Pages** and set the source to the branch/folder containing these files (typically the root of `main`).
+3. Visit the published URL to use the project.
+
+> **Note:** The 3D simulation loads Three.js from a CDN, so an internet connection is required for that page to work.
+
+## License
+
+MIT LICENSE
