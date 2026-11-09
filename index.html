@@ -5,6 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Thermo Lab 3D</title>
+
 <style>
 :root{
  --b1:#eef3ff;--b2:#b9ccf0;--glass:rgba(255,255,255,.66);
@@ -114,6 +115,84 @@ input[type=range]::-moz-range-thumb{
  white-space:pre-line;line-height:1.5
 }
 #hudc{width:100%;margin-top:8px}
+
+/* ---------- FLOATING SITE NAVIGATION ---------- */
+#site-nav-toggle{
+ position:fixed;right:18px;bottom:18px;z-index:10002;
+ width:54px;height:54px;border:1px solid rgba(255,255,255,.25);
+ border-radius:18px;background:linear-gradient(135deg,var(--a1),var(--a2));
+ color:white;font-size:25px;cursor:pointer;
+ box-shadow:0 8px 25px rgba(0,0,0,.35);
+ display:grid;place-items:center;
+ transition:transform .2s,box-shadow .2s
+}
+#site-nav-toggle:hover{
+ transform:translateY(-3px);
+ box-shadow:0 12px 30px rgba(255,106,42,.35)
+}
+#site-nav-backdrop{
+ position:fixed;inset:0;z-index:10000;
+ background:rgba(3,8,20,.55);
+ backdrop-filter:blur(4px);
+ opacity:0;visibility:hidden;transition:.25s
+}
+#site-nav{
+ position:fixed;z-index:10001;
+ right:18px;bottom:84px;
+ width:min(300px,calc(100vw - 36px));
+ padding:16px;border:1px solid var(--bd);
+ border-radius:20px;background:var(--glass);
+ color:var(--fg);
+ backdrop-filter:blur(22px);
+ -webkit-backdrop-filter:blur(22px);
+ box-shadow:0 18px 50px rgba(0,0,0,.35);
+ opacity:0;visibility:hidden;
+ transform:translateY(12px) scale(.97);
+ transform-origin:bottom right;
+ transition:opacity .22s,transform .22s,visibility .22s
+}
+body.nav-open #site-nav-backdrop{
+ opacity:1;visibility:visible
+}
+body.nav-open #site-nav{
+ opacity:1;visibility:visible;
+ transform:translateY(0) scale(1)
+}
+.nav-brand{
+ display:flex;align-items:center;gap:10px;
+ padding:4px 4px 14px;
+ border-bottom:1px solid var(--bd);
+ margin-bottom:12px
+}
+.nav-brand-icon{font-size:25px}
+.nav-brand strong{display:block;font-size:1rem}
+.nav-brand small{font-size:.75rem}
+.nav-link{
+ display:flex;align-items:center;gap:12px;
+ width:100%;padding:12px;
+ margin:4px 0;border:1px solid transparent;
+ border-radius:12px;background:transparent;
+ color:var(--fg);text-decoration:none;
+ font:inherit;text-align:left;cursor:pointer;
+ transition:background .2s,border-color .2s
+}
+.nav-link:hover{
+ background:rgba(255,106,42,.10);
+ border-color:var(--bd)
+}
+.nav-link.active{
+ background:linear-gradient(135deg,var(--a1),var(--a2));
+ color:white;font-weight:650;
+ box-shadow:0 5px 16px rgba(255,106,42,.2)
+}
+.nav-icon{
+ width:25px;text-align:center;font-size:19px
+}
+.nav-footer{
+ margin-top:12px;padding-top:12px;
+ border-top:1px solid var(--bd);
+ color:var(--mut);font-size:.72rem;text-align:center
+}
 @media(max-width:760px){
  #app{grid-template-columns:1fr;grid-template-rows:44% 56%}
  #stage{order:1}
@@ -121,9 +200,12 @@ input[type=range]::-moz-range-thumb{
  #hud{width:170px;padding:8px}
  #hudt{font-size:.7rem}
  #hudc{display:none!important}
+ #site-nav-toggle{right:14px;bottom:14px}
+ #site-nav{right:14px;bottom:78px}
 }
 </style>
 </head>
+
 <body>
 <div id="app">
 <aside>
@@ -158,7 +240,47 @@ input[type=range]::-moz-range-thumb{
 </div>
 </div>
 
+<!-- Navigation menu -->
+<button id="site-nav-toggle" aria-label="Open navigation menu"
+ aria-expanded="false" aria-controls="site-nav">☰</button>
+
+<div id="site-nav-backdrop"></div>
+
+<nav id="site-nav" aria-label="Main navigation">
+ <div class="nav-brand">
+  <span class="nav-brand-icon">🔥</span>
+  <div>
+   <strong>Thermo Lab 3D</strong>
+   <small>Project navigation</small>
+  </div>
+ </div>
+
+ <a class="nav-link" href="index.html" data-page="index.html">
+  <span class="nav-icon">🏠</span> Home / Simulation
+ </a>
+ <a class="nav-link" href="tutorial.html" data-page="tutorial.html">
+  <span class="nav-icon">📘</span> User Tutorial
+ </a>
+ <a class="nav-link" href="about.html" data-page="about.html">
+  <span class="nav-icon">ℹ️</span> About the Project
+ </a>
+ <a class="nav-link" href="references.html" data-page="references.html">
+  <span class="nav-icon">📚</span> References
+ </a>
+ <a class="nav-link" href="credits.html" data-page="credits.html">
+  <span class="nav-icon">👥</span> Credits
+ </a>
+ <a class="nav-link" href="disclaimer.html" data-page="disclaimer.html">
+  <span class="nav-icon">⚠️</span> Disclaimer
+ </a>
+
+ <div class="nav-footer">
+  Thermo Lab 3D · Educational Simulation
+ </div>
+</nav>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <script>
 const $=id=>document.getElementById(id);
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
@@ -752,6 +874,49 @@ function frame(t){
 
 setModel('gas');
 requestAnimationFrame(frame);
+
+// ---------- NAVIGATION BEHAVIOR ----------
+const navToggle=$('site-nav-toggle');
+const navBackdrop=$('site-nav-backdrop');
+const navLinks=document.querySelectorAll('.nav-link');
+
+function openNav(){
+ document.body.classList.add('nav-open');
+ navToggle.setAttribute('aria-expanded','true');
+ navToggle.textContent='✕';
+}
+
+function closeNav(){
+ document.body.classList.remove('nav-open');
+ navToggle.setAttribute('aria-expanded','false');
+ navToggle.textContent='☰';
+}
+
+navToggle.addEventListener('click',()=>{
+ if(document.body.classList.contains('nav-open')){
+  closeNav();
+ }else{
+  openNav();
+ }
+});
+
+navBackdrop.addEventListener('click',closeNav);
+
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape')closeNav();
+});
+
+// Highlight the current page in the navigation.
+const currentPage=location.pathname.split('/').pop()||'index.html';
+
+navLinks.forEach(link=>{
+ if(link.dataset.page===currentPage){
+  link.classList.add('active');
+  link.setAttribute('aria-current','page');
+ }
+
+ link.addEventListener('click',closeNav);
+});
 </script>
 </body>
 </html>
