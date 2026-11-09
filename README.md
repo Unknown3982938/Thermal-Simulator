@@ -41,4 +41,4 @@ This is a static site — GitHub Pages can host it without a backend.
 
 ## License
 
-MIT LICENSE
+GNU-GPL-v3.0
