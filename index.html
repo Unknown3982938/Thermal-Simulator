@@ -395,9 +395,19 @@ function colors(){
 
 const R=8.314,KB=1.380649e-23,NA=6.022e23;
 
+// Material constants are rounded averages (kJ/kg·K for c, kJ/kg for L, °C for mp/bp).
+// pal = particle colours [solid, liquid, gas], liq = colour of the liquid volume.
+// To add a material, copy one line and change the numbers.
 const SUB={
- Water:{mp:0,bp:100,ci:2.09,cl:4.18,cg:2.01,lf:334,lv:2260},
- Ethanol:{mp:-114,bp:78,ci:.97,cl:2.44,cg:1.43,lf:108,lv:846}
+ Water:   {mp:0,   bp:100,  ci:2.09, cl:4.18, cg:2.01, lf:334, lv:2260,  pal:[0xcfeaff,0x3b8dff,0xff9a62],liq:0x2f8cff},
+ Ethanol: {mp:-114,bp:78,   ci:.97,  cl:2.44, cg:1.43, lf:108, lv:846,   pal:[0xdde6ff,0x7aa2ff,0xffa77a],liq:0x6f8cff},
+ Aluminum:{mp:660, bp:2470, ci:.90,  cl:1.18, cg:.77,  lf:397, lv:10500, pal:[0xc9d1da,0xe6edf5,0xffc58a],liq:0xcfd8e3},
+ Copper:  {mp:1085,bp:2562, ci:.385, cl:.495, cg:.33,  lf:205, lv:4730,  pal:[0xd98a5f,0xff9b45,0xffe0a8],liq:0xe0792f},
+ Iron:    {mp:1538,bp:2862, ci:.45,  cl:.82,  cg:.37,  lf:247, lv:6090,  pal:[0x9aa3ad,0xff7a2a,0xffd27a],liq:0xff5a1f},
+ Lead:    {mp:327, bp:1749, ci:.129, cl:.14,  cg:.10,  lf:23,  lv:858,   pal:[0x8b95a3,0xb7c0cc,0xffc78a],liq:0x9aa6b5},
+ Silver:  {mp:962, bp:2162, ci:.235, cl:.31,  cg:.19,  lf:105, lv:2360,  pal:[0xe3e8ee,0xf3f6fa,0xffd9a8],liq:0xdfe6ee},
+ Gold:    {mp:1064,bp:2856, ci:.129, cl:.149, cg:.106, lf:64,  lv:1650,  pal:[0xffd24a,0xffb300,0xffe9a0],liq:0xf2b705},
+ Mercury: {mp:-39, bp:357,  ci:.14,  cl:.139, cg:.104, lf:11.4,lv:295,   pal:[0xb9c2cc,0xdfe6ee,0xffcf99],liq:0xcfd8e3}
 };
 
 const GAS={
@@ -423,7 +433,7 @@ const MODELS={
    ['m','Mass (kg)',.1,5,.1,1],
    ['d','Start below melting (°C)',1,50,1,20],
    ['q','Heat added (kJ)',0,16000,50,1000],
-   ['pw','Heating rate (kJ/s)',5,500,5,100]
+   ['pw','Heating rate (kJ/s)',5,2500,5,100]
   ]
  },
  law:{
@@ -449,7 +459,7 @@ const EXPLANATIONS={
  heat:{
   title:'Phase Change',
   body:'This model follows a substance as heat is added. The material can warm up, melt, warm as a liquid, boil, and finally warm as a gas.'+MORE,
-  detail:'During melting and boiling, energy is used for the phase change. The temperature remains constant during these idealized transitions.',
+  detail:'During melting and boiling, energy is used for the phase change. The temperature remains constant during these idealized transitions. Material constants are rounded averages, so real values vary with temperature.',
   formula:'Q = mcΔT  or  Q = mL',
   terms:'Q = heat energy · m = mass · c = specific heat capacity · L = latent heat'
  },
@@ -903,22 +913,31 @@ function updateExplanation(k){
  `;
 }
 
+function applyPalette(){                 // particle and liquid colours follow the chosen material
+ if(!G3||mode!=='heat')return;
+ const m=SUB[opt]||SUB.Water;
+ G3.pal=m.pal.map(h=>new THREE.Color(h));
+ G3.liq.material.color.setHex(m.liq);
+}
+
 function resetRun(){
  simT=0;TL=[];tlStep=.1;tlLast=-1;
  if(mode==='gas'){S.T=v.T;S.V=v.V;S.n=v.n;}
  else if(mode==='heat'){S.Q=0;}
  else{S.fq=0;S.fw=0;S.fn=v.fn;}
  buildLegend();
+ applyPalette();
  initP();
  dirty=true;
 }
 
-function fixQ(){                         // heat slider range follows the substance, mass and start temperature
+function fixQ(){                         // heat slider range and step follow the material, mass and start temperature
  const el=$('q');
  if(!el)return;
- const mx=Math.max(100,Math.ceil(stages().E[5]/50)*50);
- el.max=mx;
- if(+el.value>mx)el.value=mx;
+ const E5=stages().E[5],stp=E5<200?1:E5<1000?5:E5<5000?10:E5<20000?50:100;
+ el.step=stp;
+ el.max=Math.max(stp*2,Math.ceil(E5/stp)*stp);   // the top of the slider reaches the full curve
+ if(+el.value>+el.max)el.value=el.max;
  if(syncs.q)syncs.q();
 }
 
@@ -992,9 +1011,22 @@ document.querySelectorAll('.card').forEach(c=>{
  };
 });
 
+function setSlider(id,val){
+ const el=$(id);
+ if(!el)return;
+ el.value=clamp(val,+el.min,+el.max);
+ if(syncs[id])syncs[id]();
+}
+
 $('opt').onchange=e=>{
  opt=e.target.value;
- if(mode==='heat'){fixQ();resetRun();}else{initP();dirty=true;}
+ if(mode==='heat'){
+  fixQ();
+  const E5=stages().E[5];                                  // new material: run the whole curve in about 30 s
+  setSlider('q',+$('q').max);
+  setSlider('pw',Math.round(E5/30/5)*5);
+  resetRun();
+ }else{initP();dirty=true;}
 };
 
 $('bAuto').onclick=e=>{
