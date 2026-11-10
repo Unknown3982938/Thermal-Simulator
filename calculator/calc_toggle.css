@@ -1,0 +1,27 @@
+/* Thermo Lab 3D - calculator add-on. Uses the site's own theme variables. */
+#calc-toggle{position:fixed;right:84px;bottom:18px;z-index:10002;width:54px;height:54px;border:1px solid rgba(255,255,255,.25);
+ border-radius:18px;background:linear-gradient(135deg,#2f7cff,#62d4ff);color:#fff;font-size:24px;cursor:pointer;display:grid;place-items:center;
+ box-shadow:0 8px 25px rgba(0,0,0,.35);transition:transform .2s,box-shadow .2s}
+#calc-toggle:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(47,124,255,.4)}
+#calc-toggle[aria-expanded="true"]{background:linear-gradient(135deg,var(--a1,#ff6a2a),var(--a2,#ffb347))}
+#calc-panel{position:fixed;right:18px;bottom:84px;z-index:9990;width:min(350px,calc(100vw - 28px));max-height:calc(100vh - 104px);overflow:auto;
+ padding:12px;border-radius:20px;color:var(--fg,#e9f0ff);background:var(--glass,rgba(18,28,56,.85));border:1px solid var(--bd,rgba(160,190,255,.25));
+ backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 20px 50px rgba(0,0,0,.45);
+ opacity:0;visibility:hidden;transform:translateY(14px) scale(.97);transition:.22s}
+#calc-panel.open{opacity:1;visibility:visible;transform:none}
+.calc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#calc-status{font-size:.7rem;color:var(--mut,#9db0d3)}
+#calc-in{width:100%;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--bd,#38434d);background:rgba(0,0,0,.18);
+ color:inherit;font:16px Consolas,monospace;text-align:right}
+#calc-out{text-align:right;font:700 26px Consolas,monospace;margin:6px 4px;color:var(--a2,#ffb347);min-height:34px;overflow-x:auto;white-space:nowrap}
+#calc-out.err{color:#ff6b6b;font-size:15px}
+#calc-hist{max-height:54px;overflow:auto;font:11px Consolas,monospace;color:var(--mut,#9db0d3);margin-bottom:8px}
+#calc-hist div{cursor:pointer;padding:1px 4px;text-align:right}#calc-hist div:hover{color:var(--fg,#fff)}
+.calc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.calc-grid button{height:38px;border-radius:11px;border:1px solid var(--bd,#38434d);background:rgba(255,255,255,.07);color:inherit;
+ font:600 13px system-ui,sans-serif;cursor:pointer;transition:transform .08s,background .15s}
+.calc-grid button:active{transform:scale(.93)}
+.calc-grid .fn{background:rgba(98,150,255,.16)}
+.calc-grid .op{background:rgba(255,179,71,.2)}
+.calc-grid .eq{background:linear-gradient(135deg,var(--a1,#ff6a2a),var(--a2,#ffb347));color:#fff;border-color:transparent}
+@media (max-width:760px){#calc-toggle{right:80px;bottom:14px}#calc-panel{right:14px;bottom:80px}.calc-grid button{height:34px}}
