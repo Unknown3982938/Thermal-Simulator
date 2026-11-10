@@ -203,6 +203,27 @@ body.nav-open #site-nav{
  #site-nav-toggle{right:14px;bottom:14px}
  #site-nav{right:14px;bottom:78px}
 }
+
+/* ---------- TIME FRAME + TIMELINE (v2) ---------- */
+.chips{display:flex;gap:6px;margin-top:10px}
+.chips button{flex:1;padding:8px 0;border-radius:10px;border:1px solid var(--bd);background:transparent;color:var(--fg);cursor:pointer;font-weight:700}
+.chips button.on{background:var(--a1);color:#fff;border-color:var(--a1)}
+#tf .tog{margin-top:8px}
+#clock{font-family:Consolas,monospace;text-transform:none;letter-spacing:0;color:var(--fg)}
+#tf .hint{font-size:.74rem;margin:8px 0 0;line-height:1.45}
+#tl{position:absolute;left:12px;bottom:12px;width:min(580px,calc(100% - 190px));padding:8px 10px;border-radius:16px;
+ background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--bd);
+ box-shadow:0 12px 30px rgba(0,0,0,.25);cursor:default}
+#tlh{display:flex;align-items:center;gap:8px;font-size:.78rem}
+#tlLeg{flex:1;display:flex;flex-wrap:wrap;gap:2px 10px;font:11px Consolas,monospace;color:var(--mut)}
+#tlLeg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+#tlLeg b{color:var(--fg);font-weight:600}
+#tlBtn{border:0;background:transparent;color:var(--fg);font-size:16px;cursor:pointer;transition:transform .2s;padding:2px 6px}
+#tlc{display:block;width:100%;height:120px;margin-top:6px}
+#tl.min #tlc{display:none}
+#tl.min #tlBtn{transform:rotate(180deg)}
+#no3d{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--mut);line-height:1.5;pointer-events:none}
+@media (max-width:760px){#tl{width:calc(100% - 24px)}}
 </style>
 <link rel="stylesheet" href="extras.css">
 </head>
@@ -222,6 +243,25 @@ body.nav-open #site-nav{
  <div id="optrow"><select id="opt"></select></div>
  <div id="sl"></div>
 
+ <div class="sec"><span>Time frame</span><span id="clock">t = 0.0 s</span></div>
+ <div id="tf">
+  <div class="sl">
+   <label><span>Simulation speed</span><b id="ts_o">×1</b></label>
+   <input type="range" id="ts" min="1" max="10" step="1" value="1">
+  </div>
+  <div class="chips">
+   <button data-s="1" class="on">×1</button>
+   <button data-s="2">×2</button>
+   <button data-s="5">×5</button>
+   <button data-s="10">×10</button>
+  </div>
+  <div class="tog">
+   <button id="bJump">Jump to target</button>
+   <button id="bCsv">Export CSV</button>
+  </div>
+  <p class="note hint">Sliders set the target. The system moves toward it over time, and the timeline graph records every change.</p>
+ </div>
+
  <div id="explain"></div>
 
  <div class="sec">View</div>
@@ -237,6 +277,14 @@ body.nav-open #site-nav{
  <div id="hud">
   <div id="hudt"></div>
   <canvas id="hudc" width="480" height="260"></canvas>
+ </div>
+ <div id="tl">
+  <div id="tlh">
+   <b>Timeline</b>
+   <span id="tlLeg"></span>
+   <button id="tlBtn" type="button" aria-label="Collapse timeline" aria-expanded="true">▾</button>
+  </div>
+  <canvas id="tlc" width="560" height="120"></canvas>
  </div>
 </div>
 </div>
@@ -287,9 +335,63 @@ body.nav-open #site-nav{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
+// ---------- NAVIGATION BEHAVIOR (own script so it works even if the 3D view fails) ----------
+(()=>{
+ const g=id=>document.getElementById(id);
+ const navToggle=g('site-nav-toggle');
+ const navBackdrop=g('site-nav-backdrop');
+ const navLinks=document.querySelectorAll('.nav-link');
+
+ function openNav(){
+  document.body.classList.add('nav-open');
+  navToggle.setAttribute('aria-expanded','true');
+  navToggle.textContent='✕';
+ }
+
+ function closeNav(){
+  document.body.classList.remove('nav-open');
+  navToggle.setAttribute('aria-expanded','false');
+  navToggle.textContent='☰';
+ }
+
+ navToggle.addEventListener('click',()=>{
+  if(document.body.classList.contains('nav-open')){
+   closeNav();
+  }else{
+   openNav();
+  }
+ });
+
+ navBackdrop.addEventListener('click',closeNav);
+
+ document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeNav();
+ });
+
+ const currentPage=location.pathname.split('/').pop()||'index.html';
+
+ navLinks.forEach(link=>{
+  if(link.dataset.page===currentPage){
+   link.classList.add('active');
+   link.setAttribute('aria-current','page');
+  }
+  link.addEventListener('click',closeNav);
+ });
+})();
+</script>
+
+<script>
 const $=id=>document.getElementById(id);
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// Theme colours are cached (reading computed styles every frame is slow).
+let COL={t:-1e9};
+function colors(){
+ const now=performance.now();
+ if(now-COL.t>500)COL={t:now,mut:css('--mut'),fg:css('--fg'),bd:css('--bd')};
+ return COL;
+}
 
 const R=8.314,KB=1.380649e-23,NA=6.022e23;
 
@@ -320,7 +422,8 @@ const MODELS={
   sl:[
    ['m','Mass (kg)',.1,5,.1,1],
    ['d','Start below melting (°C)',1,50,1,20],
-   ['q','Heat added (kJ)',0,16000,50,1000]
+   ['q','Heat added (kJ)',0,16000,50,1000],
+   ['pw','Heating rate (kJ/s)',5,500,5,100]
   ]
  },
  law:{
@@ -334,410 +437,463 @@ const MODELS={
  }
 };
 
+const MORE=' Sliders set the target values; the system moves toward them over time, and the Time frame controls speed that up.';
 const EXPLANATIONS={
  gas:{
   title:'Gas Laws',
-  body:'This model demonstrates how pressure, volume, temperature, and the amount of gas are related. Change the sliders and observe how the gas particles behave inside the container.',
+  body:'This model demonstrates how pressure, volume, temperature, and the amount of gas are related. Change the sliders and observe how the gas particles behave inside the container.'+MORE,
   detail:'Increasing temperature makes the particles move faster. Changing the volume changes the available space.',
   formula:'PV = nRT',
   terms:'P = pressure · V = volume · n = amount of gas · R = gas constant · T = absolute temperature'
  },
  heat:{
   title:'Phase Change',
-  body:'This model follows a substance as heat is added. The material can warm up, melt, warm as a liquid, boil, and finally warm as a gas.',
+  body:'This model follows a substance as heat is added. The material can warm up, melt, warm as a liquid, boil, and finally warm as a gas.'+MORE,
   detail:'During melting and boiling, energy is used for the phase change. The temperature remains constant during these idealized transitions.',
   formula:'Q = mcΔT  or  Q = mL',
   terms:'Q = heat energy · m = mass · c = specific heat capacity · L = latent heat'
  },
  law:{
   title:'First Law of Thermodynamics',
-  body:'This model demonstrates energy conservation in a thermodynamic system. Heat transferred into a gas and work done by the gas determine its change in internal energy.',
+  body:'This model demonstrates energy conservation in a thermodynamic system. Heat transferred into a gas and work done by the gas determine its change in internal energy.'+MORE,
   detail:'Positive heat input increases internal energy. Work done by the gas transfers energy out of the system.',
   formula:'ΔU = Q − W',
   terms:'ΔU = change in internal energy · Q = heat added · W = work done by the gas'
  }
 };
 
-let mode='gas',opt='Nitrogen',paused=false,auto=true;
-const v={};
+let mode='gas',opt='Nitrogen',paused=false,auto=true,TS=1;
+let dirty=true,built=false,simT=0;
+const v={};          // slider targets
+const S={T:300,V:25,n:2,Q:0,fq:0,fw:0,fn:2};   // actual (animated) values
+const syncs={};
+const approach=(c,t,m)=>c<t?Math.min(t,c+m):Math.max(t,c-m);
 
-// ---------- THREE.JS SCENE ----------
-const stage=$('stage');
-const ren=new THREE.WebGLRenderer({antialias:true,alpha:true});
-ren.setPixelRatio(Math.min(devicePixelRatio,2));
-ren.domElement.id='gl';
-stage.prepend(ren.domElement);
-
-const scene=new THREE.Scene();
-const cam=new THREE.PerspectiveCamera(45,1,.1,100);
-
-scene.add(new THREE.AmbientLight(0xffffff,.65));
-
-const sun=new THREE.DirectionalLight(0xffffff,.9);
-sun.position.set(5,8,4);
-scene.add(sun);
-
-const hl=new THREE.PointLight(0xff6a2a,0,10);
-hl.position.set(0,-.4,0);
-scene.add(hl);
-
-const base=new THREE.Mesh(
- new THREE.CylinderGeometry(3.2,3.4,.3,48),
- new THREE.MeshStandardMaterial({
-  color:0x26324f,metalness:.6,roughness:.35
- })
-);
-base.position.y=-.15;
-scene.add(base);
-
-const heater=new THREE.Mesh(
- new THREE.CylinderGeometry(1.9,1.9,.06,48),
- new THREE.MeshStandardMaterial({
-  color:0x331a10,emissive:0xff6a2a,emissiveIntensity:0
- })
-);
-heater.position.y=.03;
-scene.add(heater);
-
-const bg=new THREE.BoxGeometry(3,1,3);
-bg.translate(0,.5,0);
-
-const box=new THREE.Group();
-
-box.add(new THREE.Mesh(
- bg,
- new THREE.MeshPhysicalMaterial({
-  color:0x9fd0ff,transparent:true,opacity:.13,
-  roughness:.05,side:THREE.DoubleSide,depthWrite:false
- })
-));
-
-box.add(new THREE.LineSegments(
- new THREE.EdgesGeometry(bg),
- new THREE.LineBasicMaterial({color:0xbfe0ff})
-));
-
-scene.add(box);
-
-const liq=new THREE.Mesh(
- bg,
- new THREE.MeshStandardMaterial({
-  color:0x2f8cff,transparent:true,opacity:.32,depthWrite:false
- })
-);
-liq.scale.set(.98,1,.98);
-scene.add(liq);
-
-const piston=new THREE.Group();
-const steel=new THREE.MeshStandardMaterial({
- color:0xc4ccd8,metalness:.85,roughness:.25
-});
-
-piston.add(new THREE.Mesh(
- new THREE.BoxGeometry(3.08,.18,3.08),steel
-));
-
-const rod=new THREE.Mesh(
- new THREE.CylinderGeometry(.09,.09,3,16),steel
-);
-rod.position.y=1.6;
-piston.add(rod);
-scene.add(piston);
-
-const N=150,P=[];
-
+// ---------- PARTICLES (typed arrays: no per-frame allocation) ----------
+const N=150;
+const px=new Float32Array(N),py=new Float32Array(N),pz=new Float32Array(N);
+const vx=new Float32Array(N),vy=new Float32Array(N),vz=new Float32Array(N);
+const lx=new Float32Array(N),ly=new Float32Array(N),lz=new Float32Array(N),pu=new Float32Array(N);
+const ck=new Int16Array(N).fill(-1);
 for(let i=0;i<N;i++){
- P.push({
-  p:new THREE.Vector3(),
-  v:new THREE.Vector3(),
-  u:Math.random(),
-  l:new THREE.Vector3(
-   (i%5-2)*.26,
-   .15+(Math.floor(i/5)%6)*.26,
-   (Math.floor(i/30)-2)*.26
-  )
- });
+ lx[i]=(i%5-2)*.26;
+ ly[i]=.15+(Math.floor(i/5)%6)*.26;
+ lz[i]=(Math.floor(i/30)-2)*.26;
+ pu[i]=Math.random();
 }
 
-const mesh=new THREE.InstancedMesh(
- new THREE.SphereGeometry(.075,14,14),
- new THREE.MeshStandardMaterial({roughness:.25,metalness:.15}),
- N
-);
-scene.add(mesh);
-
-const dum=new THREE.Object3D();
-const col=new THREE.Color();
-
 function initP(){
- P.forEach(o=>{
-  if(mode==='heat')o.p.copy(o.l);
-  else o.p.set(
-   (Math.random()-.5)*2.6,
-   .2+Math.random()*1.5,
-   (Math.random()-.5)*2.6
-  );
-  o.v.set(
-   Math.random()-.5,
-   Math.random()-.5,
-   Math.random()-.5
-  ).setLength(1);
- });
+ for(let i=0;i<N;i++){
+  if(mode==='heat'){px[i]=lx[i];py[i]=ly[i];pz[i]=lz[i];}
+  else{
+   px[i]=(Math.random()-.5)*2.6;
+   py[i]=.2+Math.random()*1.5;
+   pz[i]=(Math.random()-.5)*2.6;
+  }
+  const x=Math.random()-.5,y=Math.random()-.5,z=Math.random()-.5,l=Math.hypot(x,y,z)||1;
+  vx[i]=x/l;vy[i]=y/l;vz[i]=z/l;
+ }
+ ck.fill(-1);
+}
+
+// ---------- 3D SCENE (guarded: if WebGL/Three.js fails, the rest still works) ----------
+let G3=null,pr=Math.min(window.devicePixelRatio||1,2);
+let curH=2.5,liqTop=0,last=0,th=.7,ph=1.15,ds=9,drag=null;
+const stage=$('stage');
+
+function init3D(){
+ if(typeof THREE==='undefined')throw new Error('Three.js did not load');
+ const ren=new THREE.WebGLRenderer({antialias:true,alpha:true});
+ ren.setPixelRatio(pr);
+ ren.domElement.id='gl';
+ stage.prepend(ren.domElement);
+ ren.domElement.addEventListener('webglcontextlost',e=>e.preventDefault());
+
+ const scene=new THREE.Scene();
+ const cam=new THREE.PerspectiveCamera(45,1,.1,100);
+ scene.add(new THREE.AmbientLight(0xffffff,.65));
+ const sun=new THREE.DirectionalLight(0xffffff,.9);
+ sun.position.set(5,8,4);
+ scene.add(sun);
+ const hl=new THREE.PointLight(0xff6a2a,0,10);
+ hl.position.set(0,-.4,0);
+ scene.add(hl);
+
+ const base=new THREE.Mesh(
+  new THREE.CylinderGeometry(3.2,3.4,.3,48),
+  new THREE.MeshStandardMaterial({color:0x26324f,metalness:.6,roughness:.35})
+ );
+ base.position.y=-.15;
+ scene.add(base);
+
+ const heater=new THREE.Mesh(
+  new THREE.CylinderGeometry(1.9,1.9,.06,48),
+  new THREE.MeshStandardMaterial({color:0x331a10,emissive:0xff6a2a,emissiveIntensity:0})
+ );
+ heater.position.y=.03;
+ scene.add(heater);
+
+ const bg=new THREE.BoxGeometry(3,1,3);
+ bg.translate(0,.5,0);
+ const box=new THREE.Group();
+ box.add(new THREE.Mesh(bg,new THREE.MeshPhysicalMaterial({
+  color:0x9fd0ff,transparent:true,opacity:.13,roughness:.05,side:THREE.DoubleSide,depthWrite:false
+ })));
+ box.add(new THREE.LineSegments(new THREE.EdgesGeometry(bg),new THREE.LineBasicMaterial({color:0xbfe0ff})));
+ scene.add(box);
+
+ const liq=new THREE.Mesh(bg,new THREE.MeshStandardMaterial({
+  color:0x2f8cff,transparent:true,opacity:.32,depthWrite:false
+ }));
+ liq.scale.set(.98,1,.98);
+ scene.add(liq);
+
+ const piston=new THREE.Group();
+ const steel=new THREE.MeshStandardMaterial({color:0xc4ccd8,metalness:.85,roughness:.25});
+ piston.add(new THREE.Mesh(new THREE.BoxGeometry(3.08,.18,3.08),steel));
+ const rod=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,3,16),steel);
+ rod.position.y=1.6;
+ piston.add(rod);
+ scene.add(piston);
+
+ const mesh=new THREE.InstancedMesh(
+  new THREE.SphereGeometry(.075,14,14),
+  new THREE.MeshStandardMaterial({roughness:.25,metalness:.15}),
+  N
+ );
+ mesh.frustumCulled=false;               // fixes particles vanishing at some camera angles
+ mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+ const tmp=new THREE.Color();
+ for(let i=0;i<N;i++){mesh.setColorAt(i,tmp);mesh.instanceMatrix.array[i*16+15]=1;}
+ scene.add(mesh);
+
+ return{ren,scene,cam,box,piston,liq,heater,hl,mesh,
+  M:mesh.instanceMatrix.array,C:mesh.instanceColor.array,
+  pal:[0xcfeaff,0x3b8dff,0xff9a62].map(h=>new THREE.Color(h)),tmp,gb:-1,gc:[0,0,0]};
+}
+
+try{G3=init3D();}
+catch(err){
+ console.error(err);
+ stage.insertAdjacentHTML('beforeend','<div id="no3d">3D view unavailable (Three.js or WebGL could not load).<br>Controls, time frame and graphs still work.</div>');
+}
+
+function resize(){
+ const w=stage.clientWidth,h=stage.clientHeight;
+ if(!w||!h||!G3)return;
+ G3.ren.setSize(w,h,false);
+ G3.cam.aspect=w/h;
+ G3.cam.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+
+// Lower the render resolution automatically on slow devices.
+let ema=.016,slow=0;
+function perf(raw){
+ if(!G3||!raw||raw>.2)return;
+ ema+=(raw-ema)*.05;
+ if(ema>.034&&pr>1){
+  slow+=raw;
+  if(slow>2){pr=1;G3.ren.setPixelRatio(1);resize();slow=0;}
+ }else slow=0;
 }
 
 // ---------- PHYSICS ----------
+let stageKey='',stageVal=null;
 function stages(){
+ const key=opt+'|'+v.m+'|'+v.d;
+ if(key===stageKey)return stageVal;
  const s=SUB[opt]||SUB.Water;
  const m=v.m,t0=s.mp-v.d,top=s.bp+50;
-
- const dq=[
-  m*s.ci*v.d,
-  m*s.lf,
-  m*s.cl*(s.bp-s.mp),
-  m*s.lv,
-  m*s.cg*50
- ];
-
+ const dq=[m*s.ci*v.d,m*s.lf,m*s.cl*(s.bp-s.mp),m*s.lv,m*s.cg*50];
  const E=[0];
  dq.forEach(d=>E.push(E[E.length-1]+d));
-
- return{
-  E,
-  Tt:[t0,s.mp,s.mp,s.bp,s.bp,top]
- };
+ stageKey=key;
+ stageVal={E,Tt:[t0,s.mp,s.mp,s.bp,s.bp,top]};
+ return stageVal;
 }
 
 const NAMES=[
- 'Solid warming (sensible)',
- 'Melting (latent)',
- 'Liquid warming (sensible)',
- 'Boiling (latent)',
- 'Gas warming (sensible)'
+ 'Solid warming (sensible)','Melting (latent)','Liquid warming (sensible)',
+ 'Boiling (latent)','Gas warming (sensible)'
 ];
 
-function state(){
+function state(Q){
  const{E,Tt}=stages();
- const q=v.q;
  let i=4,f=1;
-
- if(q<E[5]){
+ if(Q<E[5]){
   i=0;
-  while(q>E[i+1])i++;
-  f=(q-E[i])/(E[i+1]-E[i]);
+  while(Q>E[i+1])i++;
+  f=(Q-E[i])/(E[i+1]-E[i]);
  }
-
- return{
-  i,f,
-  T:Tt[i]+(Tt[i+1]-Tt[i])*f,
-  E,Tt
- };
+ return{i,f,T:Tt[i]+(Tt[i+1]-Tt[i])*f,E,Tt};
 }
 
-const cls=(st,u)=>
- st.i===0?0:
- st.i===1?(u<st.f?1:0):
- st.i===2?1:
- st.i===3?(u<st.f?2:1):2;
-
-let curH=2.5,liqTop=0,last=0,th=.7,ph=1.15,ds=9,drag=null;
-
-function step(dt){
- let n=N,Tk=300,hT=3.2,glow=0,st=null;
- const G=GAS[opt]||GAS.Nitrogen;
-
+// Move the "actual" values toward the slider targets (dt in simulated seconds).
+function dynamics(dt){
  if(mode==='gas'){
-  n=Math.floor(v.n*30);
-  Tk=v.T;
-  hT=1+(v.V-5)/45*3.2;
-  glow=(Tk-300)/700;
+  S.T=approach(S.T,v.T,120*dt);
+  S.V=approach(S.V,v.V,8*dt);
+  S.n=approach(S.n,v.n,1.5*dt);
+ }else if(mode==='heat'){
+  S.Q=Math.max(0,approach(S.Q,v.q,v.pw*dt));
+ }else{
+  S.fq=approach(S.fq,v.fq,15*dt);
+  S.fw=approach(S.fw,v.fw,15*dt);
+  S.fn=approach(S.fn,v.fn,1.5*dt);
  }
- else if(mode==='heat'){
-  st=state();
-  Tk=st.T+273.15;
-  glow=clamp(v.q/3000,0,1);
- }
- else{
-  const du=v.fq-v.fw;
-  n=Math.floor(v.fn*30);
-  Tk=clamp(300+du*1000/(1.5*v.fn*R),100,1500);
-  hT=2.4+v.fw*.02;
-  glow=v.fq/50;
- }
+}
 
- curH+=(hT-curH)*Math.min(1,6*dt);
+const D={n:N,Tk:300,hT:3.2,glow:0,st:null};
+function derive(){
+ if(mode==='gas'){
+  D.st=null;D.n=Math.floor(S.n*30);D.Tk=S.T;
+  D.hT=1+(S.V-5)/45*3.2;D.glow=(D.Tk-300)/700;
+ }else if(mode==='heat'){
+  const st=state(S.Q),act=v.q-S.Q,b=clamp(S.Q/3000,0,1);
+  D.st=st;D.n=N;D.Tk=st.T+273.15;D.hT=3.2;
+  D.glow=act>.5?.5+.5*b:act<-.5?-.7:.35*b;      // orange: heating, blue: cooling
+ }else{
+  const du=S.fq-S.fw;
+  D.st=null;D.n=Math.floor(S.fn*30);
+  D.Tk=clamp(300+du*1000/(1.5*S.fn*R),100,1500);
+  D.hT=2.4+S.fw*.02;D.glow=S.fq/50;
+ }
+}
 
+function moveParticles(dt,dtv){
+ const g=G3,st=D.st,n=D.n,Tk=D.Tk,Gp=GAS[opt]||GAS.Nitrogen;
  let nl=0;
- if(st)P.forEach(o=>{
-  if(cls(st,o.u)===1)nl++;
- });
+ if(st)for(let i=0;i<N;i++){
+  const k=st.i;
+  if(k===2||(k===1&&pu[i]<st.f)||(k===3&&pu[i]>=st.f))nl++;
+ }
+ const kl=dt?Math.min(1,5*dt):1;
+ liqTop+=((nl?.25+nl/N*1.3:0)-liqTop)*kl;
+ curH+=(D.hT-curH)*(dt?Math.min(1,6*dt):1);
 
- liqTop+=((nl?.25+nl/N*1.3:0)-liqTop)*Math.min(1,5*dt);
+ const sp=1.8*Math.sqrt(Tk/300)*Math.pow(.028/Gp.M,.35);
+ const r=.075,lim=1.5-r,hi=curH-r,top1=Math.max(.3,liqTop);
+ const jit=.03*Tk/250,lf=clamp(8*dtv,0,1);
+ const M=g.M,C=g.C;
+ let bucket=0;
+ if(!st){
+  bucket=Math.round(clamp((Tk-100)/900,0,1)*31);
+  if(bucket!==g.gb){g.gb=bucket;g.tmp.setHSL(.62-.62*bucket/31,.9,.55);g.gc=[g.tmp.r,g.tmp.g,g.tmp.b];}
+ }
 
- const sp=1.8*Math.sqrt(Tk/300)*Math.pow(.028/G.M,.35);
- const r=.075,lim=1.5-r;
-
- P.forEach((o,i)=>{
-  const p=o.p,s=st?cls(st,o.u):2;
-
-  if(i<n){
-   if(s===0){
-    const a=.015*Tk/250;
-    p.lerp(
-     o.l.clone().add(
-      new THREE.Vector3(
-       Math.random()-.5,
-       Math.random()-.5,
-       Math.random()-.5
-      ).multiplyScalar(a*2)
-     ),
-     clamp(8*dt,0,1)
-    );
-   }
-   else{
-    const top=s===1?Math.max(.3,liqTop):curH-r;
-    o.v.setLength(s===1?sp*.5:sp*(st?.8:1));
-    p.addScaledVector(o.v,dt);
-
-    if(Math.abs(p.x)>lim){
-     o.v.x*=-1;
-     p.x=clamp(p.x,-lim,lim);
-    }
-
-    if(Math.abs(p.z)>lim){
-     o.v.z*=-1;
-     p.z=clamp(p.z,-lim,lim);
-    }
-
-    if(s===1&&p.y>top+.05){
-     o.v.y=-Math.abs(o.v.y);
-     p.y-=1.5*dt;
-    }
-    else if(p.y>top||p.y<r){
-     o.v.y*=-1;
-     p.y=clamp(p.y,r,Math.max(r,top));
-    }
-   }
-  }
-
-  dum.position.copy(p);
-  dum.scale.setScalar(i<n?G.s:0);
-  dum.updateMatrix();
-  mesh.setMatrixAt(i,dum.matrix);
-
+ for(let i=0;i<N;i++){
+  let s=2;
   if(st){
-   col.set(s===0?0xcfeaff:s===1?0x3b8dff:0xff9a62);
-  }
-  else{
-   col.setHSL(
-    .62-.62*clamp((Tk-100)/900,0,1),
-    .9,.55
-   );
+   const k=st.i;
+   s=k===0?0:k===1?(pu[i]<st.f?1:0):k===2?1:k===3?(pu[i]<st.f?2:1):2;
   }
 
-  mesh.setColorAt(i,col);
+  if(i<n&&dtv>0){
+   if(s===0){
+    px[i]+=(lx[i]+(Math.random()-.5)*jit-px[i])*lf;
+    py[i]+=(ly[i]+(Math.random()-.5)*jit-py[i])*lf;
+    pz[i]+=(lz[i]+(Math.random()-.5)*jit-pz[i])*lf;
+   }else{
+    const top=s===1?top1:hi,spd=s===1?sp*.5:sp*(st?.8:1);
+    px[i]+=vx[i]*spd*dtv;py[i]+=vy[i]*spd*dtv;pz[i]+=vz[i]*spd*dtv;
+    if(px[i]>lim||px[i]<-lim){vx[i]=-vx[i];px[i]=clamp(px[i],-lim,lim);}
+    if(pz[i]>lim||pz[i]<-lim){vz[i]=-vz[i];pz[i]=clamp(pz[i],-lim,lim);}
+    if(s===1&&py[i]>top+.05){vy[i]=-Math.abs(vy[i]);py[i]-=1.5*dtv;}
+    else if(py[i]>top||py[i]<r){vy[i]=-vy[i];py[i]=clamp(py[i],r,Math.max(r,top));}
+   }
+  }
+
+  const o=i*16,sc=i<n?Gp.s:0;
+  M[o]=sc;M[o+5]=sc;M[o+10]=sc;M[o+12]=px[i];M[o+13]=py[i];M[o+14]=pz[i];
+
+  const key=st?s:3+bucket;
+  if(key!==ck[i]){
+   ck[i]=key;
+   const c=st?g.pal[s]:null,j=i*3;
+   C[j]=c?c.r:g.gc[0];C[j+1]=c?c.g:g.gc[1];C[j+2]=c?c.b:g.gc[2];
+   g.mesh.instanceColor.needsUpdate=true;
+  }
+ }
+ g.mesh.instanceMatrix.needsUpdate=true;
+
+ g.box.scale.y=curH;
+ g.piston.position.y=curH+.09;
+ g.liq.visible=mode==='heat'&&liqTop>.05;
+ g.liq.scale.y=Math.max(.01,liqTop);
+
+ const hot=D.glow>=0,gl=clamp(Math.abs(D.glow),0,1);
+ g.heater.material.emissive.set(hot?0xff6a2a:0x3b8dff);
+ g.heater.material.emissiveIntensity=gl*1.8;
+ g.hl.color.set(hot?0xff6a2a:0x3b8dff);
+ g.hl.intensity=gl*2.2;
+}
+
+// ---------- TIMELINE DATA ----------
+const SERIES={
+ gas:[
+  {n:'T',u:'K',c:'#ff7a45',g:0,d:0,f:()=>S.T},
+  {n:'P',u:'kPa',c:'#4aa3df',g:1,d:1,f:()=>S.n*R*S.T/(S.V/1000)/1000},
+  {n:'V',u:'L',c:'#3fae6a',g:2,d:1,f:()=>S.V}
+ ],
+ heat:[
+  {n:'T',u:'°C',c:'#ff7a45',g:0,d:1,f:()=>D.st.T},
+  {n:'Q',u:'kJ',c:'#4aa3df',g:1,d:0,f:()=>S.Q},
+  {n:'Stage',u:'',c:'#3fae6a',g:2,d:1,f:()=>D.st.i+D.st.f}
+ ],
+ law:[
+  {n:'Q',u:'kJ',c:'#e05a5a',g:0,d:1,f:()=>S.fq},
+  {n:'W',u:'kJ',c:'#4aa3df',g:0,d:1,f:()=>S.fw},
+  {n:'ΔU',u:'kJ',c:'#3fae6a',g:0,d:1,f:()=>S.fq-S.fw},
+  {n:'T',u:'K',c:'#ffb347',g:1,d:0,f:()=>D.Tk}
+ ]
+};
+const MAXS=480;
+let TL=[],tlStep=.1,tlLast=-1,tlDirty=true,legEls=[];
+
+function buildLegend(){
+ $('tlLeg').innerHTML=SERIES[mode].map(s=>
+  `<span><i style="background:${s.c}"></i>${s.n} <b></b></span>`).join('');
+ legEls=[...$('tlLeg').querySelectorAll('b')];
+}
+
+function sample(){
+ if(simT-tlLast<tlStep)return;
+ tlLast=simT;
+ TL.push([simT,...SERIES[mode].map(s=>s.f())]);
+ if(TL.length>MAXS){TL=TL.filter((_,i)=>i%2===0);tlStep*=2;}   // keep the whole run, bounded memory
+ tlDirty=true;
+}
+
+function sizeTL(){
+ const c=$('tlc'),dpr=Math.min(window.devicePixelRatio||1,2),w=c.clientWidth;
+ if(!w)return;
+ c.width=Math.round(w*dpr);c.height=Math.round(120*dpr);
+ tlDirty=true;
+}
+
+function drawTL(){
+ tlDirty=false;
+ const c=$('tlc');
+ if(!c.clientWidth||!TL.length)return;
+ const g=c.getContext('2d'),W=c.width,H=c.height,k=W/c.clientWidth,C=colors();
+ const L=6*k,Rt=8*k,Tp=8*k,B=18*k,pw=W-L-Rt,ph2=H-Tp-B;
+ g.clearRect(0,0,W,H);
+ g.lineWidth=1;g.strokeStyle=C.bd;
+ for(let i=0;i<=3;i++){const y=Tp+ph2*i/3;g.beginPath();g.moveTo(L,y);g.lineTo(W-Rt,y);g.stroke();}
+ const t0=TL[0][0],t1=TL[TL.length-1][0],span=Math.max(t1-t0,1);
+ const ser=SERIES[mode],lo={},hi={};
+ ser.forEach((s,j)=>{
+  TL.forEach(r=>{
+   const x=r[j+1];
+   if(lo[s.g]===undefined||x<lo[s.g])lo[s.g]=x;
+   if(hi[s.g]===undefined||x>hi[s.g])hi[s.g]=x;
+  });
  });
+ ser.forEach((s,j)=>{
+  const pad=Math.max((hi[s.g]-lo[s.g])*.08,1e-6),a=lo[s.g]-pad,b=hi[s.g]+pad;
+  const X=t=>L+(t-t0)/span*pw,Y=x=>Tp+(1-(x-a)/(b-a))*ph2;
+  g.strokeStyle=s.c;g.lineWidth=2.2*k;g.beginPath();
+  TL.forEach((r,i)=>{i?g.lineTo(X(r[0]),Y(r[j+1])):g.moveTo(X(r[0]),Y(r[j+1]));});
+  g.stroke();
+  const e=TL[TL.length-1];
+  g.fillStyle=s.c;g.beginPath();g.arc(X(e[0]),Y(e[j+1]),3.2*k,0,7);g.fill();
+ });
+ g.fillStyle=C.mut;g.font=`${11*k}px Consolas,monospace`;
+ g.fillText(t0.toFixed(0)+' s',L,H-4*k);
+ const lab=t1.toFixed(1)+' s';
+ g.fillText(lab,W-Rt-g.measureText(lab).width,H-4*k);
+}
 
- mesh.instanceMatrix.needsUpdate=true;
- mesh.instanceColor.needsUpdate=true;
-
- box.scale.y=curH;
- piston.position.y=curH+.09;
-
- liq.visible=mode==='heat'&&liqTop>.05;
- liq.scale.y=Math.max(.01,liqTop);
-
- const hot=glow>=0;
- const g=clamp(Math.abs(glow),0,1);
-
- heater.material.emissive.set(hot?0xff6a2a:0x3b8dff);
- heater.material.emissiveIntensity=g*1.8;
- hl.color.set(hot?0xff6a2a:0x3b8dff);
- hl.intensity=g*2.2;
-
- hud(st,Tk);
+function updateLegend(){
+ const e=TL[TL.length-1];
+ if(!e)return;
+ SERIES[mode].forEach((s,j)=>{if(legEls[j])legEls[j].textContent=e[j+1].toFixed(s.d)+(s.u?' '+s.u:'');});
 }
 
 // ---------- HUD ----------
-function hud(st,Tk){
- const c=$('hudc'),g=c.getContext('2d');
- const W=c.width,H=c.height;
+function hud(){
+ const c=$('hudc'),g=c.getContext('2d'),W=c.width,H=c.height,C=colors();
  g.clearRect(0,0,W,H);
-
  let t='';
 
  if(mode==='gas'){
-  const G=GAS[opt];
+  const G=GAS[opt]||GAS.Nitrogen;
   t=
-`Pressure  ${(v.n*R*v.T/(v.V/1000)/1000).toFixed(1)} kPa
-Avg KE    ${(1.5*KB*v.T).toExponential(2)} J
-v_rms     ${Math.sqrt(3*R*v.T/G.M).toFixed(0)} m/s
-Molecules ${(v.n*NA).toExponential(2)}`;
+`Pressure  ${(S.n*R*S.T/(S.V/1000)/1000).toFixed(1)} kPa
+Avg KE    ${(1.5*KB*S.T).toExponential(2)} J
+v_rms     ${Math.sqrt(3*R*S.T/G.M).toFixed(0)} m/s
+Molecules ${(S.n*NA).toExponential(2)}`;
  }
  else if(mode==='heat'){
-  const ph=['Solid','Solid + liquid','Liquid','Liquid + gas','Gas'][st.i];
-
+  const st=D.st,ph=['Solid','Solid + liquid','Liquid','Liquid + gas','Gas'][st.i];
   t=
 `${ph}
 Temp  ${st.T.toFixed(1)} °C
-Heat  ${v.q.toFixed(0)} / ${st.E[5].toFixed(0)} kJ`+
-  (st.i===1||st.i===3?`\nPhase change ${(st.f*100).toFixed(0)}%`:'');
+Heat  ${S.Q.toFixed(0)} / ${st.E[5].toFixed(0)} kJ`+
+  (st.i===1||st.i===3?`\nPhase change ${(st.f*100).toFixed(0)}%`:'')+
+  `\nTarget ${v.q.toFixed(0)} kJ @ ${v.pw} kJ/s`;
 
   const{E,Tt}=st,t0=Tt[0],tp=Tt[5];
   const X=q=>30+q/E[5]*(W-45);
   const Y=T=>H-25-(T-t0)/(tp-t0)*(H-45);
 
-  g.strokeStyle=css('--mut');
-  g.lineWidth=2;
-  g.beginPath();
-  g.moveTo(30,10);
-  g.lineTo(30,H-25);
-  g.lineTo(W-10,H-25);
-  g.stroke();
+  g.strokeStyle=C.mut;g.lineWidth=2;
+  g.beginPath();g.moveTo(30,10);g.lineTo(30,H-25);g.lineTo(W-10,H-25);g.stroke();
 
   ['#4aa3df','#2ea84f','#1e6fd9','#2ea84f','#e05a5a'].forEach((c,i)=>{
-   g.strokeStyle=c;
-   g.lineWidth=5;
-   g.beginPath();
-   g.moveTo(X(E[i]),Y(Tt[i]));
-   g.lineTo(X(E[i+1]),Y(Tt[i+1]));
-   g.stroke();
+   g.strokeStyle=c;g.lineWidth=5;
+   g.beginPath();g.moveTo(X(E[i]),Y(Tt[i]));g.lineTo(X(E[i+1]),Y(Tt[i+1]));g.stroke();
   });
 
+  const tg=state(clamp(v.q,0,E[5]));            // hollow ring = target
+  g.strokeStyle='#ff3b30';g.lineWidth=3;
+  g.beginPath();g.arc(X(Math.min(v.q,E[5])),Y(tg.T),11,0,7);g.stroke();
   g.fillStyle='#ff3b30';
-  g.beginPath();
-  g.arc(X(Math.min(v.q,E[5])),Y(st.T),9,0,7);
-  g.fill();
+  g.beginPath();g.arc(X(Math.min(S.Q,E[5])),Y(st.T),9,0,7);g.fill();
  }
  else{
-  const du=v.fq-v.fw;
-  const dT=du*1000/(1.5*v.fn*R);
-
+  const du=S.fq-S.fw,dT=du*1000/(1.5*S.fn*R);
   t=
-`ΔU = ${v.fq} − ${v.fw} = ${du.toFixed(1)} kJ
+`ΔU = ${S.fq.toFixed(1)} − ${S.fw.toFixed(1)} = ${du.toFixed(1)} kJ
 Gas ${du>0?'warms up':du<0?'cools down':'steady'}
 ΔT = ${dT.toFixed(1)} K`;
 
-  [[v.fq,'#e05a5a','Q'],[v.fw,'#4aa3df','W'],[du,'#3fae6a','ΔU']].forEach(([x,c,l],i)=>{
-   const h=x/110*(H/2-30);
-   const bx=40+i*140;
+  [[S.fq,'#e05a5a','Q'],[S.fw,'#4aa3df','W'],[du,'#3fae6a','ΔU']].forEach(([x,c,l],i)=>{
+   const h=x/110*(H/2-30),bx=40+i*140;
    g.fillStyle=c;
    g.fillRect(bx,h>=0?H/2-h:H/2,90,Math.abs(h));
-   g.fillStyle=css('--fg');
-   g.font='20px system-ui';
+   g.fillStyle=C.fg;g.font='20px system-ui';
    g.fillText(l,bx+35,H-8);
   });
-
-  g.fillStyle=css('--mut');
+  g.fillStyle=C.mut;
   g.fillRect(20,H/2-1,W-40,2);
  }
-
  $('hudt').textContent=t;
+}
+
+// ---------- MAIN TICK ----------
+let lastHud=0;
+function tick(dt){                       // dt = real seconds (0 = refresh without advancing time)
+ const dSim=dt*TS,dtv=dt*(1+(TS-1)*.25);  // particle motion is eased at high speeds for readability
+ simT+=dSim;
+ dynamics(dSim);
+ derive();
+ sample();
+ if(G3)moveParticles(dt,dtv);
+ const now=performance.now();
+ if(!dt||now-lastHud>90){
+  lastHud=now;
+  hud();
+  updateLegend();
+  $('clock').textContent=`t = ${simT.toFixed(1)} s · ×${TS}${paused?' · paused':''}`;
+ }
+ if(tlDirty&&!$('tl').classList.contains('min'))drawTL();
 }
 
 // ---------- UI ----------
 function updateExplanation(k){
  const e=EXPLANATIONS[k];
-
  $('explain').innerHTML=`
   <h3>${e.title}</h3>
   <p>${e.body}</p>
@@ -747,56 +903,71 @@ function updateExplanation(k){
  `;
 }
 
+function resetRun(){
+ simT=0;TL=[];tlStep=.1;tlLast=-1;
+ if(mode==='gas'){S.T=v.T;S.V=v.V;S.n=v.n;}
+ else if(mode==='heat'){S.Q=0;}
+ else{S.fq=0;S.fw=0;S.fn=v.fn;}
+ buildLegend();
+ initP();
+ dirty=true;
+}
+
+function fixQ(){                         // heat slider range follows the substance, mass and start temperature
+ const el=$('q');
+ if(!el)return;
+ const mx=Math.max(100,Math.ceil(stages().E[5]/50)*50);
+ el.max=mx;
+ if(+el.value>mx)el.value=mx;
+ if(syncs.q)syncs.q();
+}
+
 function setModel(k){
  if(!MODELS[k])k='gas';
-
- mode=k;
+ mode=k;built=false;
  if(window.ThermoLabExtras)window.ThermoLabExtras.recordMode(k);
  const M=MODELS[k];
 
- document.querySelectorAll('.card').forEach(c=>
-  c.classList.toggle('on',c.dataset.k===k)
- );
+ document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',c.dataset.k===k));
 
  $('eq').textContent=M.eq;
  $('opt').innerHTML=M.opts.map(o=>`<option>${o}</option>`).join('');
  $('optrow').style.display=M.opts.length?'':'none';
-
  opt=M.opts[mode==='gas'?1:0]||'';
  $('opt').value=opt;
 
  $('sl').innerHTML='';
+ for(const key in syncs)delete syncs[key];
 
  M.sl.forEach(([id,lab,lo,hi,stp,df])=>{
   v[id]=df;
-
   const d=document.createElement('div');
   d.className='sl';
-
   d.innerHTML=`
    <label><span>${lab}</span><b id="${id}_o"></b></label>
-   <input type="range" id="${id}" min="${lo}" max="${hi}"
-    step="${stp}" value="${df}">
+   <input type="range" id="${id}" min="${lo}" max="${hi}" step="${stp}" value="${df}">
   `;
-
   $('sl').appendChild(d);
-
   const el=d.querySelector('input');
-
   const sync=()=>{
    v[id]=+el.value;
-   el.style.setProperty('--p',(el.value-lo)/(hi-lo)*100+'%');
+   el.style.setProperty('--p',(el.value-el.min)/(el.max-el.min)*100+'%');
    $(id+'_o').textContent=(+el.value).toFixed(stp<1?1:0);
+   if(built){
+    dirty=true;
+    if(mode==='heat'&&(id==='m'||id==='d')){fixQ();resetRun();}   // new setup = new run
+   }
   };
-
+  syncs[id]=sync;
   el.oninput=sync;
   sync();
  });
+ built=true;
+ if(k==='heat')fixQ();
 
  $('hudc').style.display=k==='gas'?'none':'block';
-
  updateExplanation(k);
- initP();
+ resetRun();
 }
 
 // Create model buttons.
@@ -823,7 +994,7 @@ document.querySelectorAll('.card').forEach(c=>{
 
 $('opt').onchange=e=>{
  opt=e.target.value;
- initP();
+ if(mode==='heat'){fixQ();resetRun();}else{initP();dirty=true;}
 };
 
 $('bAuto').onclick=e=>{
@@ -835,6 +1006,7 @@ $('bPause').onclick=e=>{
  paused=!paused;
  e.target.classList.toggle('on',paused);
  e.target.textContent=paused?'Resume':'Pause';
+ dirty=true;
 };
 
 $('bReset').onclick=()=>{
@@ -845,100 +1017,123 @@ $('bReset').onclick=()=>{
  history.replaceState({},'',url);
 };
 
+// ----- time frame controls -----
+function setSpeed(n){
+ TS=clamp(Math.round(n),1,10);
+ const el=$('ts');
+ el.value=TS;
+ el.style.setProperty('--p',(TS-1)/9*100+'%');
+ $('ts_o').textContent='×'+TS;
+ document.querySelectorAll('.chips button').forEach(b=>b.classList.toggle('on',+b.dataset.s===TS));
+ dirty=true;
+}
+$('ts').oninput=e=>setSpeed(+e.target.value);
+document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>setSpeed(+b.dataset.s));
+setSpeed(1);
+
+$('bJump').onclick=()=>{
+ if(mode==='gas'){S.T=v.T;S.V=v.V;S.n=v.n;}
+ else if(mode==='heat'){S.Q=v.q;}
+ else{S.fq=v.fq;S.fw=v.fw;S.fn=v.fn;}
+ dirty=true;
+};
+
+$('bCsv').onclick=()=>{
+ const ser=SERIES[mode];
+ const rows=[['t_s',...ser.map(s=>s.n+(s.u?` (${s.u})`:''))].join(',')];
+ TL.forEach(r=>rows.push(r.map((x,i)=>x.toFixed(i?4:2)).join(',')));
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));
+ a.download=`thermolab-${mode}-timeline.csv`;
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+
+// ----- timeline panel -----
+const tlEl=$('tl');
+if(matchMedia('(max-width:760px)').matches){
+ tlEl.classList.add('min');
+ $('tlBtn').setAttribute('aria-expanded','false');
+ $('tlBtn').setAttribute('aria-label','Expand timeline');
+}
+$('tlBtn').onclick=()=>{
+ const m=tlEl.classList.toggle('min');
+ $('tlBtn').setAttribute('aria-expanded',String(!m));
+ $('tlBtn').setAttribute('aria-label',m?'Expand timeline':'Collapse timeline');
+ if(!m){sizeTL();tlDirty=true;}
+};
+['pointerdown','wheel'].forEach(ev=>tlEl.addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
+new ResizeObserver(sizeTL).observe(tlEl);
+
+// ----- camera: drag to orbit, wheel or pinch to zoom -----
+const ptrs=new Map();
+let pinch=0;
+const pdist=()=>{const [a,b]=[...ptrs.values()];return Math.hypot(a[0]-b[0],a[1]-b[1]);};
+
 stage.onpointerdown=e=>{
- drag=[e.clientX,e.clientY];
+ ptrs.set(e.pointerId,[e.clientX,e.clientY]);
  stage.setPointerCapture(e.pointerId);
+ if(ptrs.size===2){drag=null;pinch=pdist();}
+ else drag=[e.clientX,e.clientY];
 };
 
 stage.onpointermove=e=>{
- if(!drag)return;
- th-=(e.clientX-drag[0])*.008;
- ph=clamp(ph-(e.clientY-drag[1])*.006,.25,1.5);
- drag=[e.clientX,e.clientY];
+ if(!ptrs.has(e.pointerId))return;
+ ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+ if(ptrs.size===2){
+  const d=pdist();
+  if(pinch&&d)ds=clamp(ds*pinch/d,5,16);
+  pinch=d;
+ }else if(drag){
+  th-=(e.clientX-drag[0])*.008;
+  ph=clamp(ph-(e.clientY-drag[1])*.006,.25,1.5);
+  drag=[e.clientX,e.clientY];
+ }
 };
 
-stage.onpointerup=()=>drag=null;
-stage.onpointercancel=()=>drag=null;
+const endPtr=e=>{
+ ptrs.delete(e.pointerId);
+ pinch=0;
+ drag=null;
+ if(ptrs.size===1){const [p]=[...ptrs.values()];drag=[p[0],p[1]];}
+};
+stage.onpointerup=endPtr;
+stage.onpointercancel=endPtr;
 
 stage.onwheel=e=>{
  e.preventDefault();
  ds=clamp(ds+e.deltaY*.01,5,16);
 };
 
-new ResizeObserver(()=>{
- const w=stage.clientWidth,h=stage.clientHeight;
- if(!w||!h)return;
- ren.setSize(w,h,false);
- cam.aspect=w/h;
- cam.updateProjectionMatrix();
-}).observe(stage);
-
 function frame(t){
- const dt=Math.min(.05,(t-last)/1000||0);
+ const raw=(t-last)/1000||0;
  last=t;
+ const dt=Math.min(.05,raw);
+ perf(raw);
 
- if(!paused)step(dt);
+ if(!paused)tick(dt);
+ else if(dirty)tick(0);
+ dirty=false;
+
  if(auto&&!drag)th+=.12*dt;
 
- const k=cam.aspect<1?1/Math.sqrt(cam.aspect):1;
- const d=ds*k;
-
- cam.position.set(
-  d*Math.sin(ph)*Math.sin(th),
-  1.6+d*Math.cos(ph),
-  d*Math.sin(ph)*Math.cos(th)
- );
-
- cam.lookAt(0,1.5,0);
- ren.render(scene,cam);
-
+ if(G3){
+  const k=G3.cam.aspect<1?1/Math.sqrt(G3.cam.aspect):1,d=ds*k;
+  G3.cam.position.set(
+   d*Math.sin(ph)*Math.sin(th),
+   1.6+d*Math.cos(ph),
+   d*Math.sin(ph)*Math.cos(th)
+  );
+  G3.cam.lookAt(0,1.5,0);
+  G3.ren.render(G3.scene,G3.cam);
+ }
  requestAnimationFrame(frame);
 }
 
 // Start with the requested model.
 setModel(initialMode);
+sizeTL();
 requestAnimationFrame(frame);
-
-// ---------- NAVIGATION BEHAVIOR ----------
-const navToggle=$('site-nav-toggle');
-const navBackdrop=$('site-nav-backdrop');
-const navLinks=document.querySelectorAll('.nav-link');
-
-function openNav(){
- document.body.classList.add('nav-open');
- navToggle.setAttribute('aria-expanded','true');
- navToggle.textContent='✕';
-}
-
-function closeNav(){
- document.body.classList.remove('nav-open');
- navToggle.setAttribute('aria-expanded','false');
- navToggle.textContent='☰';
-}
-
-navToggle.addEventListener('click',()=>{
- if(document.body.classList.contains('nav-open')){
-  closeNav();
- }else{
-  openNav();
- }
-});
-
-navBackdrop.addEventListener('click',closeNav);
-
-document.addEventListener('keydown',e=>{
- if(e.key==='Escape')closeNav();
-});
-
-const currentPage=location.pathname.split('/').pop()||'index.html';
-
-navLinks.forEach(link=>{
- if(link.dataset.page===currentPage){
-  link.classList.add('active');
-  link.setAttribute('aria-current','page');
- }
- link.addEventListener('click',closeNav);
-});
 </script>
 <script src="extras.js"></script>
  <script src="calculator/calc_toggle.js"></script>
