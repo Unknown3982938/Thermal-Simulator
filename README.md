@@ -9,6 +9,7 @@ A static, browser-based thermodynamics learning project built as a Physics 2 sch
 - **Achievements** — Locally tracked milestones as you explore.
 - **Learning Resources** — Tutorial, references, and about pages to support the project.
 - **Easter Egg** — Type `THERMO` on any page (outside a text field) or click the laboratory brand mark seven times to reveal a hidden surprise.
+- **Built-in python Calculator**
 
 ## Pages
 
