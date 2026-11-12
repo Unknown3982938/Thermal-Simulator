@@ -1,157 +1,180 @@
-/* Thermo Lab 3D: shared design system ("the lab notebook").
-   Every page loads this file, so it re-themes the whole site: warm paper by day,
-   a cosy evening lab by night (follows the device setting). */
+/* Thermo Lab 3D: shared design system, "thermal instrument".
+   Signature ideas: a heat ramp (ice to ember), isotherm contour lines, ruler ticks,
+   specimen tags, and screens that behave like lab equipment.
+   Every page loads this file. Day = bone paper, night = dark console (follows the device). */
 
 :root{
   color-scheme:light dark;
-  --paper:#fbf6ec; --paper2:#f3eadb; --card:#fffdf8;
-  --ink:#2d2620; --ink2:#6b5f52; --line:#e3d6c1;
-  --clay:#c4552d; --clay-soft:#f6dccd; --sage:#5d8a64; --mustard:#c98a12; --sky:#3f6c9a; --plum:#8a5a83; --rose:#b8453f;
-  --shadow:0 1px 0 rgba(255,255,255,.8) inset,0 1px 2px rgba(90,60,30,.10),0 14px 28px -14px rgba(90,60,30,.30);
-  --shadow-hover:0 1px 0 rgba(255,255,255,.8) inset,0 2px 4px rgba(90,60,30,.12),0 20px 34px -14px rgba(90,60,30,.38);
-  --r:18px 20px 18px 22px;
-  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
-  --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --paper:#f1ece3; --paper2:#e6dfd2; --card:#faf7f1; --track:#ddd3c2;
+  --ink:#15110e; --ink2:#5d544a; --line:#d4c9b8;
+  --ember:#f2542d; --amber:#e8920c; --ice:#1f8fa6; --violet:#6b3fa0; --moss:#3f8f62; --rose:#c2384a;
+  --on-ember:#fff;
+  --scr:#0a0e13; --scr-ink:#e7eef6; --scr-dim:#7d8b9b; --scr-line:rgba(255,255,255,.08);
+  --ramp:linear-gradient(90deg,#2b2f8f,#7a3cc0 22%,#d1306f 45%,#ff6a3d 68%,#ffb23e 86%,#fff1c2);
+  --heat:1;
+  --hot:var(--ember);
+  --display:"Bahnschrift","DIN Alternate","Avenir Next Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+  --sans:"Inter","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"JetBrains Mono","SF Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 0 rgba(255,255,255,.7) inset,0 10px 24px -16px rgba(40,25,10,.45);
+  --shadow-hover:0 1px 0 rgba(255,255,255,.7) inset,0 18px 30px -14px rgba(40,25,10,.5);
 
   /* names the existing pages already use */
   --bg:var(--paper); --panel:var(--card); --panel2:var(--paper2); --border:var(--line);
   --text:var(--ink); --muted:var(--ink2);
-  --cyan:var(--clay); --blue:var(--sky); --accent:var(--clay); --accent2:var(--plum);
-  --green:var(--sage); --purple:var(--plum); --orange:var(--mustard); --warning:var(--mustard);
+  --cyan:var(--ember); --blue:var(--ice); --accent:var(--ember); --accent2:var(--violet);
+  --green:var(--moss); --purple:var(--violet); --orange:var(--amber); --warning:var(--amber);
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --paper:#1d1814; --paper2:#2a231d; --card:#2a231d;
-    --ink:#f4ead9; --ink2:#bfae97; --line:#43382d;
-    --clay:#f08a5d; --clay-soft:#4a2e22; --sage:#9ccaa2; --mustard:#f0b95a; --sky:#8db4de; --plum:#cf9bc6; --rose:#e88a84;
-    --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 1px 2px rgba(0,0,0,.4),0 14px 28px -14px rgba(0,0,0,.65);
-    --shadow-hover:0 1px 0 rgba(255,255,255,.06) inset,0 2px 4px rgba(0,0,0,.5),0 20px 34px -14px rgba(0,0,0,.75);
+    --paper:#0d1117; --paper2:#141a22; --card:#121821; --track:#1f2833;
+    --ink:#eef2f6; --ink2:#8b98a8; --line:#232d3a;
+    --ember:#ff6b3d; --amber:#ffb23e; --ice:#5ad1e6; --violet:#9b6bff; --moss:#6fd49a; --rose:#ff7a85;
+    --on-ember:#15090a;
+    --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 12px 26px -16px rgba(0,0,0,.8);
+    --shadow-hover:0 1px 0 rgba(255,255,255,.06) inset,0 20px 34px -14px rgba(0,0,0,.9);
   }
 }
+@supports (color:color-mix(in oklab,red,blue)){
+  :root{--hot:color-mix(in oklab,var(--ice) calc((1 - var(--heat)) * 100%),var(--ember))}
+}
 
-/* ---------- page, type, paper texture ---------- */
+/* ---------- page: isotherm contours + a heat strip along the top ---------- */
 html body{
   background:
-    radial-gradient(1000px 520px at 8% -8%,color-mix(in srgb,var(--clay) 11%,transparent),transparent 62%),
-    radial-gradient(900px 480px at 100% 6%,color-mix(in srgb,var(--sage) 10%,transparent),transparent 62%),
+    repeating-radial-gradient(circle at 10% 6%,transparent 0 38px,color-mix(in srgb,var(--ink) 5%,transparent) 38px 39px),
+    repeating-radial-gradient(circle at 94% 64%,transparent 0 52px,color-mix(in srgb,var(--ember) 8%,transparent) 52px 53px),
+    radial-gradient(1000px 600px at 100% 0%,color-mix(in srgb,var(--ember) 9%,transparent),transparent 62%),
+    radial-gradient(900px 600px at 0% 100%,color-mix(in srgb,var(--ice) 9%,transparent),transparent 62%),
     var(--paper);
-  color:var(--ink);
-  font-family:var(--sans);
+  background-attachment:fixed;
+  color:var(--ink);font-family:var(--sans);counter-reset:spec;
 }
 html body::before{
-  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;mask-image:none;-webkit-mask-image:none;
-  background-image:radial-gradient(color-mix(in srgb,var(--ink) 16%,transparent) 1px,transparent 1.3px);
-  background-size:22px 22px;
+  content:"";position:fixed;left:0;right:0;top:0;bottom:auto;height:3px;z-index:9999;pointer-events:none;
+  background:var(--ramp);opacity:1;mask-image:none;-webkit-mask-image:none;
 }
-html h1,html h2,html h3,html .brand,html .site-nav-title,html .nav-brand strong,html .code{font-family:var(--serif);font-weight:700}
-html h1{letter-spacing:-.02em}
-html a{text-underline-offset:3px}
-::selection{background:var(--clay-soft);color:var(--ink)}
-:focus-visible{outline:3px solid color-mix(in srgb,var(--clay) 55%,transparent);outline-offset:2px;border-radius:8px}
+html h1,html h2,html h3,html .brand,html .site-nav-title,html .nav-brand strong,html .code{font-family:var(--display);font-weight:700;letter-spacing:.005em}
+html h1{text-transform:uppercase;letter-spacing:.01em;line-height:1.02}
+::selection{background:var(--ember);color:var(--on-ember)}
+:focus-visible{outline:2px solid var(--hot);outline-offset:3px;border-radius:6px}
 
-/* small friendly labels instead of shouty caps, with a hand-drawn squiggle */
+/* small labels: mono, tracked, with a ruler glyph */
 html .eyebrow,html .section-label,html .nav-label,html .site-nav-label,html .status,html .submitted-label,html .ref-type{
-  text-transform:none;letter-spacing:.02em;font-size:12.5px;font-weight:700;color:var(--clay);
+  font:700 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--hot);
 }
 html .eyebrow::before{
-  content:"";display:inline-block;width:26px;height:8px;margin-right:9px;vertical-align:middle;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='8' viewBox='0 0 26 8'%3E%3Cpath d='M1 5c3-5 5-5 8 0s5 5 8 0 5-5 8 0' fill='none' stroke='%23c4552d' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center/contain;
+  content:"";display:inline-block;width:26px;height:9px;margin-right:10px;vertical-align:-1px;
+  background:repeating-linear-gradient(90deg,var(--hot) 0 1.5px,transparent 1.5px 5px);border-bottom:1px solid var(--hot);
 }
 
-/* ---------- paper surfaces ---------- */
+/* ---------- specimen cards ---------- */
 html .card,html .module,html .mode,html .contents,html .content-card,html .member-card,html .submitted-card,
 html .acknowledgment,html .reference,html .panel,html .entry,html .badge-card,html .progress,html .module-card,
 html .quick-card,html .overview-panel,html .info-item,html .note,html main:has(.code){
-  background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);
-  -webkit-backdrop-filter:none;backdrop-filter:none;color:var(--ink);
+  background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);color:var(--ink);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
 }
 html .card:hover,html .module:hover,html .member-card:hover,html .reference:hover,html .content-card:hover,
 html .module-card:hover,html .quick-card:hover{
-  border-color:color-mix(in srgb,var(--clay) 45%,var(--line));box-shadow:var(--shadow-hover);transform:translateY(-3px);
-  background:var(--card);
+  border-color:var(--hot);box-shadow:var(--shadow-hover),0 0 0 1px var(--hot);transform:translateY(-3px);background:var(--card);
+}
+/* auto-numbered tags and corner ticks, no markup needed */
+html .card,html .content-card,html .reference{position:relative;counter-increment:spec}
+html .card::before,html .content-card::before,html .reference::before{
+  content:"SPEC " counter(spec,decimal-leading-zero);position:absolute;top:10px;right:14px;
+  font:600 10px var(--mono);letter-spacing:.14em;color:var(--ink2);opacity:.75;pointer-events:none;
+}
+html .card::after,html .content-card::after,html .reference::after{
+  content:"";position:absolute;inset:5px;pointer-events:none;opacity:.8;
+  background:
+   linear-gradient(var(--hot),var(--hot)) 0 0/9px 1px,linear-gradient(var(--hot),var(--hot)) 0 0/1px 9px,
+   linear-gradient(var(--hot),var(--hot)) 100% 0/9px 1px,linear-gradient(var(--hot),var(--hot)) 100% 0/1px 9px,
+   linear-gradient(var(--hot),var(--hot)) 0 100%/9px 1px,linear-gradient(var(--hot),var(--hot)) 0 100%/1px 9px,
+   linear-gradient(var(--hot),var(--hot)) 100% 100%/9px 1px,linear-gradient(var(--hot),var(--hot)) 100% 100%/1px 9px;
+  background-repeat:no-repeat;
 }
 html .info-item,html .entry{background:var(--paper2);box-shadow:none}
-html .note{background:color-mix(in srgb,var(--mustard) 14%,var(--card));border-color:color-mix(in srgb,var(--mustard) 40%,var(--line))}
+html .note{border-left:3px solid var(--amber)}
 html .card p,html .module p,html .mode p,html .content-card p,html .reference p,html .badge-card p,html .entry p{color:var(--ink2)}
-html .card h3{color:var(--clay)}
+html .card h3{color:var(--ink)}
 
-/* round badges that used to be glowing cyan squares */
+/* badges: square instrument tiles */
 html .brand-icon,html .module-icon,html .mode-icon,html .member-icon,html .quick-icon,html .section-number,
 html .step-number,html .badge-icon,html .notice-icon,html .site-nav-logo{
-  background:var(--clay-soft);border:1px solid color-mix(in srgb,var(--clay) 30%,transparent);color:var(--clay);border-radius:14px;
+  background:color-mix(in srgb,var(--hot) 14%,var(--card));border:1px solid color-mix(in srgb,var(--hot) 55%,transparent);
+  color:var(--hot);border-radius:6px;font-family:var(--mono);
 }
-html .badge-icon{filter:grayscale(1);opacity:.55}
-html .badge-card.unlocked{background:color-mix(in srgb,var(--sage) 14%,var(--card));border-color:color-mix(in srgb,var(--sage) 50%,var(--line))}
-html .badge-card.unlocked .badge-icon{filter:none;opacity:1;background:color-mix(in srgb,var(--sage) 26%,var(--card));border-color:color-mix(in srgb,var(--sage) 50%,transparent)}
-html .unlocked .status{color:var(--sage)}
-html .tech,html .pill,html .ref-type{background:color-mix(in srgb,var(--sage) 15%,var(--card));border:1px solid color-mix(in srgb,var(--sage) 38%,transparent);color:var(--ink2);border-radius:999px}
-html .callout,html .notice{background:color-mix(in srgb,var(--mustard) 13%,var(--card));border:1px dashed color-mix(in srgb,var(--mustard) 55%,transparent);border-radius:14px;color:var(--ink)}
-html .formula{background:var(--paper2);border:1px dashed color-mix(in srgb,var(--clay) 45%,transparent);color:var(--clay);font-family:ui-monospace,Consolas,monospace}
+html .badge-icon{filter:grayscale(1);opacity:.5}
+html .badge-card.unlocked{border-color:var(--moss);box-shadow:var(--shadow),0 0 0 1px color-mix(in srgb,var(--moss) 60%,transparent)}
+html .badge-card.unlocked .badge-icon{filter:none;opacity:1;border-color:var(--moss);background:color-mix(in srgb,var(--moss) 18%,var(--card))}
+html .unlocked .status{color:var(--moss)}
+html .tech,html .pill,html .ref-type{background:transparent;border:1px solid var(--line);color:var(--ink2);border-radius:4px;font-family:var(--mono)}
+html .callout,html .notice{background:color-mix(in srgb,var(--amber) 9%,var(--card));border:1px solid color-mix(in srgb,var(--amber) 45%,transparent);border-left:3px solid var(--amber);border-radius:4px 8px 8px 4px;color:var(--ink)}
+html .formula{background:var(--scr);border:1px solid #000;color:var(--amber);font-family:var(--mono);border-radius:6px;box-shadow:inset 0 0 0 1px var(--scr-line)}
 
-/* ---------- top bars on the text pages ---------- */
-html nav,html header{background:color-mix(in srgb,var(--paper) 88%,transparent);border-bottom:1px solid var(--line);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-html .nav-links a,html .home-link{background:var(--card);color:var(--ink2);border:1px solid var(--line);border-radius:999px}
-html .nav-links a:hover,html .home-link:hover{color:var(--clay);border-color:var(--clay);background:var(--clay-soft)}
+/* ---------- top bars, buttons ---------- */
+html nav,html header{background:color-mix(in srgb,var(--paper) 86%,transparent);border-bottom:1px solid var(--line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+html .nav-links a,html .home-link{background:transparent;color:var(--ink2);border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:12px;letter-spacing:.04em}
+html .nav-links a:hover,html .home-link:hover{color:var(--hot);border-color:var(--hot);background:color-mix(in srgb,var(--hot) 10%,transparent)}
 html footer{color:var(--ink2);border-top:1px solid var(--line)}
-html footer span,html footer strong{color:var(--clay)}
+html footer span,html footer strong{color:var(--hot)}
 
-/* ---------- buttons ---------- */
 html .btn,html a.action,html .btn-primary{
-  background:var(--clay);color:#fff;border:1px solid color-mix(in srgb,var(--clay) 70%,#000);border-radius:999px;
-  box-shadow:0 3px 0 color-mix(in srgb,var(--clay) 62%,#000),0 10px 18px -8px color-mix(in srgb,var(--clay) 60%,transparent);
-  text-shadow:none;transition:transform .15s,box-shadow .15s;
+  background:var(--hot);color:var(--on-ember);border:1px solid transparent;border-radius:6px;
+  font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;text-shadow:none;
+  box-shadow:0 0 0 0 transparent,0 10px 22px -12px var(--hot);transition:transform .15s,box-shadow .15s;
 }
-html .btn:hover,html a.action:hover{transform:translateY(-2px)}
-html .btn:active,html a.action:active{transform:translateY(2px);box-shadow:0 1px 0 color-mix(in srgb,var(--clay) 62%,#000)}
-html .btn.secondary,html .btn-secondary,html a.secondary{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:0 3px 0 var(--line)}
-html .btn.danger{background:var(--rose);border-color:color-mix(in srgb,var(--rose) 70%,#000);box-shadow:0 3px 0 color-mix(in srgb,var(--rose) 62%,#000)}
+html .btn:hover,html a.action:hover{transform:translateY(-2px);box-shadow:0 0 0 3px color-mix(in srgb,var(--hot) 28%,transparent),0 14px 26px -12px var(--hot)}
+html .btn:active,html a.action:active{transform:translateY(1px)}
+html .btn.secondary,html .btn-secondary,html a.secondary{background:transparent;color:var(--ink);border:1px solid var(--ink2);box-shadow:none}
+html .btn.danger{background:var(--rose);color:#fff}
 
 /* ---------- dashboard ---------- */
 html .hero{
-  background:linear-gradient(120deg,color-mix(in srgb,var(--clay) 17%,var(--card)),color-mix(in srgb,var(--mustard) 13%,var(--card)));
-  border:1px solid var(--line);box-shadow:var(--shadow);
+  background:var(--ramp) top/100% 4px no-repeat,
+   radial-gradient(700px 360px at 85% 30%,color-mix(in srgb,var(--ember) 18%,transparent),transparent 70%),
+   var(--card);
+  border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);
 }
-html .hero::before{border-color:color-mix(in srgb,var(--clay) 25%,transparent);box-shadow:0 0 0 35px color-mix(in srgb,var(--clay) 6%,transparent),0 0 0 75px color-mix(in srgb,var(--clay) 4%,transparent)}
-html .hero h1 span{background:linear-gradient(90deg,var(--clay),var(--mustard));-webkit-background-clip:text;background-clip:text;color:transparent}
+html .hero::before{border-color:color-mix(in srgb,var(--hot) 35%,transparent);box-shadow:0 0 0 35px color-mix(in srgb,var(--hot) 6%,transparent),0 0 0 75px color-mix(in srgb,var(--hot) 4%,transparent)}
+html .hero h1 span{background:var(--ramp);-webkit-background-clip:text;background-clip:text;color:transparent}
 html .hero p,html .section-description,html .objective{color:var(--ink2)}
-html .hero-art{filter:drop-shadow(0 12px 18px rgba(120,60,20,.25))}
-html .menu-button{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
+html .hero-art{filter:drop-shadow(0 0 26px color-mix(in srgb,var(--ember) 45%,transparent))}
+html .menu-button{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
 html .nav-drawer{background:var(--paper);border-right:1px solid var(--line);-webkit-backdrop-filter:none;backdrop-filter:none}
-html .nav-link{color:var(--ink2)}
-html .nav-link:hover,html .nav-link.active{background:var(--clay-soft);color:var(--ink);border-color:color-mix(in srgb,var(--clay) 30%,transparent)}
-html .module-icon{border-radius:50%}
-html .module-action{color:var(--clay)}
+html .nav-link{color:var(--ink2);border-radius:6px}
+html .nav-link:hover,html .nav-link.active{background:color-mix(in srgb,var(--hot) 12%,transparent);color:var(--ink);border-color:transparent;box-shadow:inset 3px 0 0 var(--hot)}
+html .module-icon{border-radius:6px}
+html .module-action{color:var(--hot);font-family:var(--mono);letter-spacing:.06em}
 
-/* ---------- journal / achievements (they hard-code their colours) ---------- */
+/* ---------- journal / achievements (hard-coded colours) ---------- */
 html .sub,html .entry small,html .empty,html .field label,html .badge-card p{color:var(--ink2)}
-html .field input,html .field select,html .field textarea{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px}
-html .field input:focus,html .field textarea:focus,html .field select:focus{border-color:var(--clay);box-shadow:0 0 0 4px color-mix(in srgb,var(--clay) 18%,transparent)}
-html .progress-line{background:var(--paper2);border:1px solid var(--line)}
-html .progress-line span{background:linear-gradient(90deg,var(--clay),var(--mustard))}
-html .empty{border:2px dashed var(--line);background:transparent}
+html .field input,html .field select,html .field textarea{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:6px}
+html .field input:focus,html .field textarea:focus,html .field select:focus{border-color:var(--hot);box-shadow:0 0 0 3px color-mix(in srgb,var(--hot) 22%,transparent)}
+html .progress-line{background:var(--track);border:0;border-radius:3px}
+html .progress-line span{background:var(--ramp);border-radius:3px}
+html .empty{border:1px dashed var(--ink2);background:transparent}
 
-/* ---------- 404 ---------- */
-html .code{color:var(--clay);text-shadow:3px 3px 0 var(--clay-soft)}
+html .code{color:var(--hot);text-shadow:0 0 40px color-mix(in srgb,var(--hot) 55%,transparent)}
 
 /* ---------- navigation drawer (navigation.css) ---------- */
-html #site-nav-toggle{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:50%;box-shadow:var(--shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
-html #site-nav-toggle:hover{border-color:var(--clay);background:var(--clay-soft)}
-html #site-nav-backdrop{background:rgba(45,30,15,.42)}
+html #site-nav-toggle{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
+html #site-nav-toggle:hover{border-color:var(--hot);color:var(--hot)}
+html #site-nav-backdrop{background:rgba(5,8,12,.55)}
 html #site-nav{background:var(--paper);color:var(--ink);border-right:1px solid var(--line);-webkit-backdrop-filter:none;backdrop-filter:none;font-family:var(--sans)}
 html .site-nav-brand,html .site-nav-footer{border-color:var(--line)}
 html .site-nav-subtitle,html .site-nav-footer{color:var(--ink2)}
-html .site-nav-links a{color:var(--ink2);border-radius:14px}
-html .site-nav-links a:hover{background:var(--clay-soft);border-color:color-mix(in srgb,var(--clay) 30%,transparent);color:var(--ink)}
-html .site-nav-links a.active{background:var(--clay);border-color:var(--clay);color:#fff}
+html .site-nav-links a{color:var(--ink2);border-radius:6px}
+html .site-nav-links a:hover{background:color-mix(in srgb,var(--hot) 10%,transparent);border-color:transparent;color:var(--ink)}
+html .site-nav-links a.active{background:color-mix(in srgb,var(--hot) 14%,transparent);border-color:transparent;box-shadow:inset 3px 0 0 var(--hot);color:var(--ink)}
 
 /* ---------- toast and easter egg ---------- */
-:root{--extra-accent:var(--clay);--extra-panel:var(--card)}
-html #thermo-toast{background:var(--ink);color:var(--paper);border:0;border-radius:999px;font-family:var(--sans);box-shadow:0 12px 30px -8px rgba(0,0,0,.45)}
+html #thermo-toast{background:var(--scr);color:var(--scr-ink);border:1px solid #000;border-left:3px solid var(--hot);border-radius:6px;font:600 13px var(--mono);box-shadow:0 14px 30px -10px rgba(0,0,0,.6)}
 html #thermo-secret{background:color-mix(in srgb,var(--paper) 94%,transparent);color:var(--ink);font-family:var(--sans)}
-html #thermo-secret .secret-card{background:var(--card);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow-hover)}
+html #thermo-secret .secret-card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-hover)}
 html #thermo-secret p{color:var(--ink2)}
-html #thermo-secret h2{font-family:var(--serif)}
-html #thermo-secret button{background:var(--clay);border:0;border-radius:999px;color:#fff;box-shadow:0 3px 0 color-mix(in srgb,var(--clay) 62%,#000)}
-.extras-shortcut{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
+html #thermo-secret h2{font-family:var(--display);text-transform:uppercase}
+html #thermo-secret button{background:var(--hot);color:var(--on-ember);border:0;border-radius:6px;font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

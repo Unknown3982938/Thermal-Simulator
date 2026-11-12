@@ -7,141 +7,164 @@
 <title>Thermo Lab 3D</title>
 
 <style>
-/* Thermo Lab 3D: simulator page. Tokens come from extras.css; fallbacks keep it usable on its own. */
+/* Thermo Lab 3D: simulator console. Tokens come from extras.css; fallbacks keep it usable alone. */
 :root{
- --glass:var(--card,#fffdf8);--bd:var(--line,#e3d6c1);--fg:var(--ink,#2d2620);--mut:var(--ink2,#6b5f52);
- --a1:var(--clay,#c4552d);--a2:var(--mustard,#c98a12);
- --stage1:#ffe6bf;--stage2:#f3dcb9;--track:color-mix(in srgb,var(--fg) 14%,var(--paper2,#f3eadb));
+ --glass:var(--card,#faf7f1);--bd:var(--line,#d4c9b8);--fg:var(--ink,#15110e);--mut:var(--ink2,#5d544a);
+ --a1:var(--ember,#f2542d);--a2:var(--amber,#e8920c);
+ --stage1:#efe3cf;--stage2:#e4d8c4;
  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root{--stage1:#5a3d27;--stage2:#241c16}}
+@media (prefers-color-scheme:dark){:root{--stage1:#16202d;--stage2:#0a0e13}}
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden}
 body{font:15px/1.5 var(--sans,system-ui,sans-serif);color:var(--fg)}
 small{color:var(--mut)}
+#app{display:grid;grid-template-columns:352px minmax(0,1fr);height:100%}
 
-#app{display:grid;grid-template-columns:350px minmax(0,1fr);height:100%}
+/* ---------- control rack (sidebar), with a ruler along its edge ---------- */
+aside{position:relative;overflow:auto;padding:22px 22px 30px 44px;counter-reset:ch;border-right:1px solid var(--bd);
+ background:
+  repeating-linear-gradient(180deg,color-mix(in srgb,var(--fg) 38%,transparent) 0 1px,transparent 1px 8px) 12px 0/7px 80px repeat-y local,
+  repeating-linear-gradient(180deg,var(--mut) 0 1px,transparent 1px 40px) 12px 0/14px 80px repeat-y local,
+  var(--glass);
+ box-shadow:12px 0 40px -24px rgba(0,0,0,.6)}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:6px}
+.logo{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:8px;font-size:23px;
+ background:color-mix(in srgb,var(--hot) 14%,var(--glass));border:1px solid color-mix(in srgb,var(--hot) 60%,transparent);
+ box-shadow:0 0 22px -4px var(--hot)}
+h1{font-size:1.55rem;margin:0}
+.tag{margin:9px 0 0;font-size:.88rem;color:var(--mut)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--bd);
+ font:700 11px var(--mono,monospace);letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.sec::before{counter-increment:ch;content:counter(ch,decimal-leading-zero);margin-right:10px;color:var(--hot)}
+.sec span:first-child{flex:1}
+.sec span:last-child{color:var(--hot);letter-spacing:.06em}
 
-/* ---------- the notebook (sidebar) ---------- */
-aside{position:relative;overflow:auto;padding:22px 22px 30px 42px;border-right:1px solid var(--bd);
- background:radial-gradient(circle at 18px 19px,var(--paper,#fbf6ec) 5.5px,var(--bd) 6px,transparent 6.5px) 0 0/36px 38px repeat-y local,var(--glass);
- box-shadow:10px 0 34px -20px rgba(70,40,10,.45)}
-.brand{display:flex;gap:12px;align-items:center;margin-bottom:4px}
-.logo{width:46px;height:46px;flex:none;display:grid;place-items:center;border-radius:50%;font-size:24px;transform:rotate(-6deg);
- background:var(--clay-soft,#f6dccd);border:2px solid color-mix(in srgb,var(--a1) 45%,transparent)}
-h1{font-size:1.45rem;margin:0;line-height:1.1}
-.tag{margin:8px 0 0;font-size:.88rem;color:var(--mut)}
-.sec{display:flex;justify-content:space-between;align-items:baseline;margin:24px 0 11px;padding-bottom:6px;
- border-bottom:2px dotted var(--bd);font-family:var(--serif,Georgia,serif);font-size:1.04rem;font-weight:700}
-.sec span:last-child{font:600 .78rem ui-monospace,Consolas,monospace;color:var(--a1)}
+.exp{position:relative;display:flex;gap:12px;align-items:center;width:100%;margin-bottom:8px;padding:10px 12px 10px 14px;border:1px solid var(--bd);
+ border-radius:8px;background:transparent;color:var(--fg);cursor:pointer;text-align:left;font:inherit;transition:transform .15s,border-color .15s,background .15s}
+.exp::before{content:"";position:absolute;left:-1px;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--bd);transition:background .15s}
+.exp:hover{border-color:var(--hot);transform:translateX(2px)}
+.exp .i{width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:6px;background:var(--paper2,#e6dfd2);font-size:20px}
+.exp small{display:block;font:.76rem var(--mono,monospace)}
+.exp.on{border-color:var(--hot);background:color-mix(in srgb,var(--hot) 9%,transparent)}
+.exp.on::before{background:var(--hot);box-shadow:0 0 10px var(--hot)}
+.exp.on::after{content:"";position:absolute;right:13px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--hot);box-shadow:0 0 10px var(--hot)}
 
-.exp{display:flex;gap:12px;align-items:center;width:100%;margin-bottom:9px;padding:11px 13px;border:1px solid var(--bd);
- border-radius:16px 18px 16px 20px;background:var(--paper,#fbf6ec);color:var(--fg);cursor:pointer;text-align:left;font:inherit;
- box-shadow:0 2px 0 var(--bd);transition:transform .18s,box-shadow .18s,background .18s}
-.exp:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--bd)}
-.exp .i{width:42px;height:42px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--glass);border:1px solid var(--bd);font-size:21px}
-.exp small{display:block;font-size:.78rem}
-.exp.on{background:var(--clay-soft,#f6dccd);border-color:var(--a1);box-shadow:0 3px 0 var(--a1);transform:rotate(-.5deg)}
-.exp.on .i{background:var(--a1);border-color:var(--a1)}
+select{width:100%;padding:11px 38px 11px 14px;border-radius:8px;border:1px solid var(--bd);color:var(--fg);font:inherit;-webkit-appearance:none;appearance:none;
+ background:var(--paper,#f1ece3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1.5l6 6 6-6' fill='none' stroke='%23f2542d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center}
+select:focus{outline:none;border-color:var(--hot)}
 
-select{width:100%;padding:11px 38px 11px 14px;border-radius:14px;border:1px solid var(--bd);color:var(--fg);font:inherit;
- -webkit-appearance:none;appearance:none;box-shadow:0 2px 0 var(--bd);
- background:var(--glass) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1.5l6 6 6-6' fill='none' stroke='%23c4552d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center}
+.sl{margin-top:16px}
+.sl label{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:.9rem}
+.sl b{font:600 12.5px var(--mono,monospace);padding:3px 9px;border-radius:5px;background:var(--scr,#0a0e13);color:#ffcf7a;border:1px solid #000;box-shadow:inset 0 0 0 1px var(--scr-line,rgba(255,255,255,.08));min-width:52px;text-align:right}
+/* ruler slider: heat-ramp fill, tick marks, index-marker thumb */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:32px;background:transparent;cursor:pointer;outline:none;
+ background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--fg) 45%,transparent) 0 1px,transparent 1px 10%) 0 100%/calc(100% - 1px) 6px no-repeat}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:2px;
+ background:linear-gradient(90deg,transparent var(--p,50%),var(--track,#ddd3c2) var(--p,50%)),var(--ramp);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+input[type=range]::-moz-range-track{height:8px;border-radius:2px;
+ background:linear-gradient(90deg,transparent var(--p,50%),var(--track,#ddd3c2) var(--p,50%)),var(--ramp);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:26px;margin-top:-9px;border-radius:4px;cursor:grab;
+ background:linear-gradient(var(--hot),var(--hot)) center/2px 56% no-repeat,linear-gradient(180deg,#fdfbf7,#cfc6b8);
+ border:1px solid #4a4036;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+input[type=range]::-moz-range-thumb{width:12px;height:24px;border-radius:4px;cursor:grab;background:#efe8dc;border:1px solid #4a4036;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+input[type=range]:active::-webkit-slider-thumb{box-shadow:0 0 0 4px color-mix(in srgb,var(--hot) 35%,transparent),0 3px 8px rgba(0,0,0,.4)}
 
-.sl{margin-top:15px}
-.sl label{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;font-size:.92rem}
-.sl b{font-weight:700;font-variant-numeric:tabular-nums;font-size:.84rem;padding:1px 11px;border-radius:999px;background:var(--paper,#fbf6ec);border:1px solid var(--bd)}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:99px;outline:none;cursor:pointer;
- background:linear-gradient(90deg,var(--a1),var(--a2)) 0 0/var(--p,50%) 100% no-repeat,var(--track);
- box-shadow:inset 0 2px 3px rgba(60,35,10,.35),0 1px 0 rgba(255,255,255,.35)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;cursor:grab;
- background:radial-gradient(circle,var(--a1) 0 5px,transparent 5.5px),radial-gradient(circle at 35% 30%,#fff,#f1e3cc 75%);
- border:2px solid var(--a1);box-shadow:0 3px 0 rgba(90,50,20,.38),0 8px 12px -2px rgba(90,50,20,.28);transition:transform .12s}
-input[type=range]::-webkit-slider-thumb:active{transform:scale(1.12);cursor:grabbing}
-input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff3de;border:2px solid var(--a1);box-shadow:0 3px 0 rgba(90,50,20,.38)}
-
-.chips{display:flex;gap:8px;margin-top:13px}
-.tog{display:flex;gap:8px}
-#tf .tog{margin-top:11px}
-.tog button,.chips button{flex:1;padding:10px 6px;border-radius:999px;border:1px solid var(--bd);background:var(--glass);color:var(--fg);
- font:600 .86rem var(--sans,system-ui,sans-serif);cursor:pointer;box-shadow:0 3px 0 var(--bd);transition:transform .12s,box-shadow .12s}
-.tog button:active,.chips button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--bd)}
-.tog button.on,.chips button.on{background:var(--a1);color:#fff;border-color:color-mix(in srgb,var(--a1) 70%,#000);box-shadow:0 3px 0 color-mix(in srgb,var(--a1) 62%,#000)}
+.chips{display:flex;gap:7px;margin-top:12px}
+.tog{display:flex;flex-wrap:wrap;gap:7px}
+#tf .tog,.tog+.tog{margin-top:9px}
+.tog button,.chips button{flex:1 1 0;min-width:0;padding:10px 6px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--fg);
+ font:700 11px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+.tog button:hover,.chips button:hover{border-color:var(--hot)}
+.tog button:active,.chips button:active{transform:translateY(1px)}
+.tog button.on,.chips button.on{border-color:var(--hot);background:color-mix(in srgb,var(--hot) 11%,transparent)}
+.tog button.on::before,.chips button.on::before{content:"";display:inline-block;width:6px;height:6px;margin-right:7px;border-radius:50%;background:var(--hot);box-shadow:0 0 8px var(--hot);vertical-align:1px}
+.tog button.wide{flex-basis:100%}
 .hintline{font-size:.8rem;margin:11px 0 0;color:var(--mut);line-height:1.5}
 #clock{font-variant-numeric:tabular-nums}
 
-/* sticky note that explains the model */
-#explain{position:relative;margin:28px 2px 6px;padding:20px 16px 14px;line-height:1.55;transform:rotate(.4deg);
- background:color-mix(in srgb,var(--a2) 17%,var(--glass));border:1px solid color-mix(in srgb,var(--a2) 40%,var(--bd));
- border-radius:6px 6px 16px 6px;box-shadow:0 10px 18px -10px rgba(80,50,10,.45)}
-#explain::before{content:"";position:absolute;top:-11px;left:50%;width:86px;height:22px;transform:translateX(-50%) rotate(-2deg);
- background:color-mix(in srgb,var(--a1) 24%,transparent);border:1px solid color-mix(in srgb,var(--a1) 30%,transparent)}
-.kicker{display:block;font:700 .74rem var(--sans,system-ui,sans-serif);color:var(--a1);margin-bottom:3px}
-#explain h3{font-size:1.04rem;margin:0 0 6px}
+#explain{margin:26px 0 6px;padding:15px 15px 13px 17px;border:1px solid var(--bd);border-left:3px solid var(--hot);border-radius:0 10px 10px 0;
+ background:color-mix(in srgb,var(--hot) 6%,var(--glass));line-height:1.55}
+.kicker{display:block;font:700 10px var(--mono,monospace);letter-spacing:.16em;text-transform:uppercase;color:var(--hot);margin-bottom:4px}
+#explain h3{font-size:1.1rem;margin:0 0 6px}
 #explain p{font-size:.86rem;margin:6px 0;color:var(--mut)}
-#explain .formula{display:block;margin-top:10px;padding:9px 10px;border-radius:10px;background:var(--glass);color:var(--fg);font:600 .88rem ui-monospace,Consolas,monospace}
+#explain .formula{display:block;margin-top:10px;padding:9px 11px;font:600 .88rem var(--mono,monospace)}
 
-/* ---------- the bench (stage) ---------- */
+/* ---------- the stage: glows with the temperature ---------- */
 #stage{position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden;
- background:radial-gradient(80% 70% at 64% 16%,var(--stage1),transparent 72%),linear-gradient(var(--stage2),var(--paper,#fbf6ec))}
+ background:
+  repeating-radial-gradient(circle at 50% 80%,transparent 0 52px,color-mix(in srgb,var(--fg) 6%,transparent) 52px 53px),
+  radial-gradient(62% 52% at 50% 82%,color-mix(in srgb,var(--hot) calc(8% + var(--heat,.3) * 30%),transparent),transparent 72%),
+  radial-gradient(90% 70% at 72% 0%,var(--stage1),transparent 72%),var(--stage2)}
 #stage:active{cursor:grabbing}
 #gl{display:block;width:100%;height:100%}
 
-#hud{position:absolute;top:18px;right:18px;width:min(270px,calc(100% - 36px));padding:22px 16px 14px;pointer-events:none;
- background:color-mix(in srgb,var(--a2) 26%,var(--glass));border:1px solid color-mix(in srgb,var(--a2) 45%,var(--bd));
- border-radius:4px 4px 18px 4px;box-shadow:0 14px 22px -10px rgba(80,50,10,.5);transform:rotate(1.2deg)}
-#hud::before{content:"Right now";position:absolute;top:6px;left:14px;font:700 .72rem var(--sans,system-ui,sans-serif);color:var(--a1)}
-#hudt{font:.82rem/1.55 ui-monospace,Consolas,monospace;white-space:pre-line;color:var(--fg)}
-#hudc{width:100%;margin-top:8px}
+/* mercury thermometer */
+#gauge{position:absolute;left:18px;top:18px;bottom:18px;width:60px;display:flex;flex-direction:column;align-items:flex-start;pointer-events:none;font:600 10px var(--mono,monospace);color:var(--mut)}
+#gmax,#gmin{padding:3px 0;letter-spacing:.04em}
+.gwrap{position:relative;flex:1;width:100%}
+.gtube{position:absolute;left:0;top:0;bottom:0;width:18px;border-radius:9px;background:var(--scr,#0a0e13);border:1px solid #000;box-shadow:inset 0 0 0 1px var(--scr-line,rgba(255,255,255,.08)),0 10px 24px -12px rgba(0,0,0,.7);overflow:hidden}
+#mercury{position:absolute;inset:3px;border-radius:6px;background:var(--ramp);clip-path:inset(calc((1 - var(--heat,.3)) * 100%) 0 0 0);transition:clip-path .15s linear;box-shadow:0 0 14px var(--hot)}
+.gtube::after{content:"";position:absolute;inset:3px;background:repeating-linear-gradient(0deg,rgba(0,0,0,.45) 0 1px,transparent 1px 10%)}
+#gmarks span{position:absolute;left:24px;transform:translateY(50%);letter-spacing:.1em;color:var(--mut)}
+#gmarks span::before{content:"";position:absolute;left:-10px;top:50%;width:8px;height:1px;background:var(--mut)}
+#gval{position:absolute;left:24px;bottom:calc(var(--heat,.3) * 100%);transform:translateY(50%);padding:2px 7px;border-radius:4px;white-space:nowrap;
+ background:var(--hot);color:#0d0a08;font-size:11px;transition:bottom .15s linear}
 
-/* graph paper timeline */
-#tl{position:absolute;left:18px;bottom:18px;width:min(600px,calc(100% - 200px));padding:10px 14px 8px;cursor:default;
- border-radius:18px 20px 18px 22px;border:1px solid var(--bd);box-shadow:0 14px 24px -14px rgba(80,50,10,.5);
- background-color:var(--glass);background-size:20px 20px;background-position:-1px -1px;
- background-image:linear-gradient(color-mix(in srgb,var(--bd) 65%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--bd) 65%,transparent) 1px,transparent 1px)}
-#tlh{display:flex;align-items:center;gap:10px;font-size:.84rem}
-#tlh b{font-family:var(--serif,Georgia,serif);font-size:.98rem;white-space:nowrap}
-#tlLeg{flex:1;display:flex;flex-wrap:wrap;gap:3px 8px;font:11.5px ui-monospace,Consolas,monospace;color:var(--mut)}
-#tlLeg span{padding:1px 9px;border-radius:99px;background:var(--glass);border:1px solid var(--bd)}
-#tlLeg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
-#tlLeg b{color:var(--fg);font-weight:700}
-#tlBtn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bd);background:var(--glass);color:var(--fg);font-size:14px;cursor:pointer;transition:transform .2s}
-#tlc{display:block;width:100%;height:120px;margin-top:6px}
+/* screens: always dark, like real instruments */
+#hud{position:absolute;top:18px;right:18px;width:min(284px,calc(100% - 36px));padding:0 0 12px;pointer-events:none;overflow:hidden;color:var(--scr-ink,#e7eef6);
+ background:var(--scr,#0a0e13);border:1px solid #000;border-radius:10px;box-shadow:inset 0 0 0 1px var(--scr-line),0 20px 34px -16px rgba(0,0,0,.7)}
+#hud::before{content:"Right now";display:block;padding:8px 14px 7px;font:700 10px var(--mono,monospace);letter-spacing:.2em;text-transform:uppercase;color:var(--scr-dim,#7d8b9b);
+ background:var(--ramp) bottom/100% 2px no-repeat,linear-gradient(90deg,rgba(255,255,255,.05),transparent)}
+#hudt{padding:10px 14px 0;font:12.5px/1.65 var(--mono,monospace);white-space:pre-line;color:#e7eef6}
+#hudc{display:block;width:calc(100% - 28px);margin:8px 14px 0}
+
+#tl{position:absolute;left:96px;bottom:18px;width:min(640px,calc(100% - 290px));padding:0 0 8px;cursor:default;overflow:hidden;color:var(--scr-ink,#e7eef6);
+ background:var(--scr,#0a0e13);border:1px solid #000;border-radius:10px;box-shadow:inset 0 0 0 1px var(--scr-line),0 20px 34px -16px rgba(0,0,0,.7)}
+#tlh{display:flex;align-items:center;gap:10px;padding:8px 12px 7px 14px;background:var(--ramp) bottom/100% 2px no-repeat,linear-gradient(90deg,rgba(255,255,255,.05),transparent)}
+#tlh b{font:700 10px var(--mono,monospace);letter-spacing:.2em;text-transform:uppercase;color:var(--scr-dim,#7d8b9b);white-space:nowrap}
+#tlLeg{flex:1;display:flex;flex-wrap:wrap;gap:3px 12px;font:12px var(--mono,monospace);color:var(--scr-dim,#7d8b9b)}
+#tlLeg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;box-shadow:0 0 8px currentColor}
+#tlLeg b{color:#ffcf7a;font-weight:700;letter-spacing:0;text-transform:none;font-size:12px}
+#tlBtn{width:26px;height:26px;border-radius:5px;border:1px solid var(--scr-line);background:transparent;color:var(--scr-ink,#e7eef6);font-size:13px;cursor:pointer;transition:transform .2s}
+#tlc{display:block;width:calc(100% - 20px);height:120px;margin:8px 10px 0}
 #tl.min #tlc{display:none}
+#tl.min{padding-bottom:0}
 #tl.min #tlBtn{transform:rotate(180deg)}
 #no3d{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--mut);line-height:1.5;pointer-events:none}
 
 /* ---------- floating menu ---------- */
-#site-nav-toggle{position:fixed;right:18px;bottom:18px;z-index:10002;width:54px;height:54px;display:grid;place-items:center;font-size:24px;cursor:pointer;transition:transform .2s}
-#site-nav-toggle:hover{transform:translateY(-3px) rotate(-4deg)}
+#site-nav-toggle{position:fixed;right:18px;bottom:18px;z-index:10002;width:54px;height:54px;display:grid;place-items:center;font-size:23px;cursor:pointer;transition:transform .2s}
+#site-nav-toggle:hover{transform:translateY(-3px)}
 #site-nav-backdrop{position:fixed;inset:0;z-index:10000;opacity:0;visibility:hidden;transition:.25s}
-#site-nav{position:fixed;z-index:10001;right:18px;bottom:84px;width:min(310px,calc(100vw - 36px));padding:16px;
- border:1px solid var(--bd);border-radius:22px 24px 22px 26px;background:var(--glass);color:var(--fg);-webkit-backdrop-filter:none;backdrop-filter:none;
- box-shadow:0 22px 50px -18px rgba(70,40,10,.55);opacity:0;visibility:hidden;transform:translateY(12px) scale(.97);transform-origin:bottom right;
- transition:opacity .22s,transform .22s,visibility .22s}
+#site-nav{position:fixed;z-index:10001;right:18px;bottom:84px;width:min(310px,calc(100vw - 36px));padding:16px;border:1px solid var(--bd);border-radius:12px;
+ background:var(--glass);color:var(--fg);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 26px 50px -18px rgba(0,0,0,.7);
+ opacity:0;visibility:hidden;transform:translateY(12px) scale(.97);transform-origin:bottom right;transition:opacity .22s,transform .22s,visibility .22s}
 body.nav-open #site-nav-backdrop{opacity:1;visibility:visible}
 body.nav-open #site-nav{opacity:1;visibility:visible;transform:none}
-.nav-brand{display:flex;align-items:center;gap:10px;padding:4px 4px 14px;border-bottom:2px dotted var(--bd);margin-bottom:12px}
+.nav-brand{display:flex;align-items:center;gap:10px;padding:4px 4px 14px;border-bottom:1px solid var(--bd);margin-bottom:12px}
 .nav-brand-icon{font-size:25px}
-.nav-brand strong{display:block;font-size:1.05rem}
+.nav-brand strong{display:block;font-size:1.1rem}
 .nav-brand small{font-size:.75rem}
-.nav-link{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;margin:3px 0;border:1px solid transparent;border-radius:14px;
- background:transparent;color:var(--fg);text-decoration:none;font:inherit;text-align:left;cursor:pointer;transition:background .2s,border-color .2s}
+.nav-link{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;margin:3px 0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--fg);
+ text-decoration:none;font:inherit;text-align:left;cursor:pointer;transition:background .2s}
 .nav-icon{width:25px;text-align:center;font-size:19px}
-.nav-footer{margin-top:12px;padding-top:12px;border-top:2px dotted var(--bd);color:var(--mut);font-size:.74rem;text-align:center}
+.nav-footer{margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);color:var(--mut);font:.72rem var(--mono,monospace);text-align:center}
 
 /* the calculator add-on follows the same look */
-html body #calc-toggle{background:var(--glass);color:var(--fg);border:1px solid var(--bd);border-radius:50%;box-shadow:var(--shadow,0 8px 20px rgba(70,40,10,.3))}
-html body #calc-toggle:hover{background:var(--clay-soft,#f6dccd);box-shadow:var(--shadow-hover,0 10px 24px rgba(70,40,10,.4))}
-html body #calc-toggle[aria-expanded="true"]{background:var(--a1);color:#fff;border-color:var(--a1)}
-html body #calc-panel{border-radius:24px 26px 24px 28px;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 24px 50px -18px rgba(70,40,10,.6)}
-html body .calc-grid button{border-radius:14px;box-shadow:0 2px 0 var(--bd)}
+html body #calc-toggle{background:var(--glass);color:var(--fg);border:1px solid var(--bd);border-radius:8px;box-shadow:var(--shadow)}
+html body #calc-toggle:hover{border-color:var(--hot)}
+html body #calc-toggle[aria-expanded="true"]{background:var(--hot);color:var(--on-ember,#fff);border-color:var(--hot)}
+html body #calc-panel{border-radius:12px;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 26px 50px -18px rgba(0,0,0,.7)}
+html body #calc-out{font-family:var(--mono,monospace);color:#ffcf7a;background:var(--scr,#0a0e13);border-radius:6px;padding:6px 10px}
+html body .calc-grid button{border-radius:6px}
 
 @media (max-width:760px){
  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:44% 56%}
  #stage{order:1}
- aside{order:2;border-right:0;border-top:1px solid var(--bd);padding-left:40px}
- #hud{width:178px;padding:20px 10px 10px;top:12px;right:12px}
- #hudt{font-size:.7rem}
+ aside{order:2;border-right:0;border-top:1px solid var(--bd)}
+ #gauge{left:12px;top:12px;bottom:86px;width:48px}
+ #hud{width:176px;top:12px;right:12px}
+ #hudt{font-size:.68rem;padding:8px 10px 0}
  #hudc{display:none!important}
  #tl{width:calc(100% - 24px);left:12px;bottom:12px}
  #tlh{flex-wrap:wrap;gap:6px 8px}
@@ -150,7 +173,6 @@ html body .calc-grid button{border-radius:14px;box-shadow:0 2px 0 var(--bd)}
  #site-nav-toggle{right:14px;bottom:14px}
  #site-nav{right:14px;bottom:78px}
 }
-@media (prefers-reduced-motion:reduce){.exp.on,#explain,#hud{transform:none}}
 </style>
 <link rel="stylesheet" href="extras.css">
 </head>
@@ -162,7 +184,7 @@ html body .calc-grid button{border-radius:14px;box-shadow:0 2px 0 var(--bd)}
   <span class="logo">🔥</span>
   <h1>Thermo Lab 3D</h1>
  </div>
- <p class="tag">A little lab for poking at heat, gas and energy. Slide something and watch what would happens.</p>
+ <p class="tag">A little lab for poking at heat, gas and energy. Slide something and watch what happens.</p>
 
  <div class="sec">Pick an experiment</div>
  <div id="cards"></div>
@@ -198,10 +220,16 @@ html body .calc-grid button{border-radius:14px;box-shadow:0 2px 0 var(--bd)}
   <button id="bPause">Pause</button>
   <button id="bReset">Start over</button>
  </div>
+ <div class="tog"><button id="bIR" class="wide">Heat vision</button></div>
  <p class="hintline">Drag to turn the bench around. Scroll or pinch to zoom.</p>
 </aside>
 
 <div id="stage">
+ <div id="gauge" aria-hidden="true">
+  <div id="gmax"></div>
+  <div class="gwrap"><div class="gtube"><div id="mercury"></div></div><div id="gmarks"></div><div id="gval"></div></div>
+  <div id="gmin"></div>
+ </div>
  <div id="hud">
   <div id="hudt"></div>
   <canvas id="hudc" width="480" height="260"></canvas>
@@ -434,163 +462,112 @@ function initP(){
  ck.fill(-1);
 }
 
+// ---------- THERMAL RAMP (ice to ember to white-hot) ----------
+const STOPS=[[0,0x2b2f8f],[.22,0x7a3cc0],[.45,0xd1306f],[.68,0xff6a3d],[.86,0xffb23e],[1,0xfff1c2]];
+function rampAt(t){
+ let i=1;
+ while(i<STOPS.length-1&&t>STOPS[i][0])i++;
+ const a=STOPS[i-1],b=STOPS[i],k=clamp((t-a[0])/(b[0]-a[0]),0,1);
+ const f=s=>[(s>>16&255)/255,(s>>8&255)/255,(s&255)/255],A=f(a[1]),B=f(b[1]);
+ return A.map((x,j)=>x+(B[j]-x)*k);
+}
+const RAMP=Array.from({length:32},(_,i)=>rampAt(i/31));
+const SCR={mut:'#556273',fg:'#aab8c6',bd:'rgba(255,255,255,.08)'};   // the dark instrument screens
+let IR=false,heatN=.3,rippleT=0;
+
 // ---------- 3D SCENE (guarded: if WebGL/Three.js fails, the rest still works) ----------
 let G3=null,pr=Math.min(window.devicePixelRatio||1,2);
 let curH=2.5,liqTop=0,last=0,th=.7,ph=1.15,ds=9,drag=null;
 const stage=$('stage');
 
-function woodTexture(){                  // procedural planks, no image files needed
- const c=document.createElement('canvas');c.width=c.height=512;
- const g=c.getContext('2d');
- ['#b98a58','#c29461','#b2824f','#bd8e5b'].forEach((col,p)=>{
-  const y0=p*128;
-  g.fillStyle=col;g.fillRect(0,y0,512,128);
-  for(let i=0;i<46;i++){
-   g.strokeStyle=`rgba(${70+Math.random()*40|0},${40+Math.random()*25|0},15,${.05+Math.random()*.12})`;
-   g.lineWidth=.6+Math.random()*1.8;
-   const y=y0+Math.random()*128;
-   g.beginPath();g.moveTo(0,y);
-   g.bezierCurveTo(170,y+(Math.random()-.5)*10,340,y+(Math.random()-.5)*10,512,y+(Math.random()-.5)*4);
-   g.stroke();
-  }
-  g.fillStyle='rgba(60,30,10,.35)';g.fillRect(0,y0,512,2);
- });
- const t=new THREE.CanvasTexture(c);
- t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1.5,1);t.anisotropy=4;
- return t;
+function glowTexture(){                  // soft round glow, tinted at runtime
+ const c=document.createElement('canvas');c.width=c.height=256;
+ const g=c.getContext('2d'),r=g.createRadialGradient(128,128,0,128,128,128);
+ r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.35,'rgba(255,255,255,.35)');r.addColorStop(1,'rgba(255,255,255,0)');
+ g.fillStyle=r;g.fillRect(0,0,256,256);
+ return new THREE.CanvasTexture(c);
 }
 
 function init3D(){
  if(typeof THREE==='undefined')throw new Error('Three.js did not load');
  const ren=new THREE.WebGLRenderer({antialias:true,alpha:true});
  ren.setPixelRatio(pr);
- ren.shadowMap.enabled=true;
- ren.shadowMap.type=THREE.PCFSoftShadowMap;
  ren.domElement.id='gl';
  stage.prepend(ren.domElement);
  ren.domElement.addEventListener('webglcontextlost',e=>e.preventDefault());
 
  const scene=new THREE.Scene();
  const cam=new THREE.PerspectiveCamera(45,1,.1,100);
-
- // warm window light, a soft cool fill, and a glow from the hot plate
- scene.add(new THREE.HemisphereLight(0xfff1dc,0xb38559,.8));
- const sun=new THREE.DirectionalLight(0xffe2b5,.95);
- sun.position.set(4.5,8,3.5);
- sun.castShadow=true;
- sun.shadow.mapSize.set(1024,1024);
- Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6,near:1,far:24});
- sun.shadow.camera.updateProjectionMatrix();
- sun.shadow.bias=-.0005;
- scene.add(sun);
- const fill=new THREE.DirectionalLight(0xb9ceff,.3);
- fill.position.set(-5,3,-4);
- scene.add(fill);
+ scene.add(new THREE.HemisphereLight(0xd7e8ff,0x2a2018,.85));
+ const key=new THREE.DirectionalLight(0xfff1e0,.85);
+ key.position.set(4,8,5);
+ scene.add(key);
+ const rim=new THREE.DirectionalLight(0x6fd0ff,.45);
+ rim.position.set(-6,3,-5);
+ scene.add(rim);
  const hl=new THREE.PointLight(0xff7a35,0,9);
  hl.position.set(0,.35,0);
  scene.add(hl);
 
- const shade=(o,cast,recv)=>o.traverse(m=>{if(m.isMesh){m.castShadow=cast;m.receiveShadow=recv;}});
+ const add=(m)=>{scene.add(m);return m;};
+ const additive={transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide};
 
- // wooden lab bench (its top surface is at y = -0.16)
- const bench=new THREE.Mesh(
-  new THREE.BoxGeometry(9.5,.5,6.8),
-  new THREE.MeshStandardMaterial({map:woodTexture(),roughness:.82,metalness:0})
- );
- bench.position.y=-.41;
- shade(bench,false,true);
- scene.add(bench);
+ // heat bloom on the ground and ripples that travel outward while heating or cooling
+ const bloom=new THREE.Mesh(new THREE.PlaneGeometry(15,15),new THREE.MeshBasicMaterial(Object.assign({map:glowTexture(),color:0xff6a3d,opacity:.2},additive)));
+ bloom.rotation.x=-Math.PI/2;bloom.position.y=-.23;bloom.renderOrder=-2;
+ add(bloom);
+ const rings=[0,1,2,3].map(()=>{
+  const m=new THREE.Mesh(new THREE.RingGeometry(.985,1,128),new THREE.MeshBasicMaterial(Object.assign({color:0xffffff,opacity:0},additive)));
+  m.rotation.x=-Math.PI/2;m.position.y=-.22;m.renderOrder=-1;return add(m);
+ });
+ [3.1,4.4,5.8].forEach(r=>{                 // faint fixed isotherm rings
+  const m=new THREE.Mesh(new THREE.RingGeometry(r-.012,r+.012,128),new THREE.MeshBasicMaterial({color:0x8aa0b8,transparent:true,opacity:.2,side:THREE.DoubleSide,depthWrite:false}));
+  m.rotation.x=-Math.PI/2;m.position.y=-.22;add(m);
+ });
 
- // cast-iron hot plate with glowing coils
- const plate=new THREE.Mesh(
-  new THREE.CylinderGeometry(2.35,2.45,.16,56),
-  new THREE.MeshStandardMaterial({color:0x2e2a27,roughness:.55,metalness:.55})
- );
- plate.position.y=-.08;
- shade(plate,true,true);
- scene.add(plate);
+ // anodised plinth with a status ring and glowing coils
+ const steel=new THREE.MeshStandardMaterial({color:0x2c3440,metalness:.8,roughness:.32});
+ const plinth=new THREE.Mesh(new THREE.CylinderGeometry(2.55,2.68,.22,64),new THREE.MeshStandardMaterial({color:0x1b222c,metalness:.65,roughness:.4}));
+ plinth.position.y=-.11;add(plinth);
+ const top=new THREE.Mesh(new THREE.CylinderGeometry(2.3,2.3,.03,64),new THREE.MeshStandardMaterial({color:0x2a3340,metalness:.6,roughness:.45}));
+ top.position.y=-.015;add(top);
  const coilMat=new THREE.MeshStandardMaterial({color:0x2a1a12,emissive:0xff7a35,emissiveIntensity:0,roughness:.6});
  const coils=[.55,1.0,1.45].map(r=>{
   const t=new THREE.Mesh(new THREE.TorusGeometry(r,.055,10,64),coilMat);
-  t.rotation.x=Math.PI/2;t.position.y=.012;scene.add(t);return t;
+  t.rotation.x=Math.PI/2;t.position.y=.012;return add(t);
  });
- const dial=new THREE.Mesh(new THREE.CylinderGeometry(.2,.22,.22,24),new THREE.MeshStandardMaterial({color:0x7a3b22,roughness:.5}));
- dial.rotation.x=Math.PI/2;dial.position.set(0,-.06,2.58);
- shade(dial,true,false);
- scene.add(dial);
+ const edge=new THREE.Mesh(new THREE.TorusGeometry(2.62,.035,8,96),coilMat);
+ edge.rotation.x=Math.PI/2;edge.position.y=-.03;add(edge);
 
- // glass tank with brass corner posts (posts stretch with the tank)
- const brass=new THREE.MeshStandardMaterial({color:0xc9a24a,metalness:.65,roughness:.38});
+ // glass tank with steel posts (posts stretch with the tank)
  const bg=new THREE.BoxGeometry(3,1,3);
  bg.translate(0,.5,0);
  const box=new THREE.Group();
- box.add(new THREE.Mesh(bg,new THREE.MeshPhysicalMaterial({
-  color:0xcfe6ee,transparent:true,opacity:.16,roughness:.04,side:THREE.DoubleSide,depthWrite:false
- })));
- box.add(new THREE.LineSegments(new THREE.EdgesGeometry(bg),new THREE.LineBasicMaterial({color:0xfff6e6,transparent:true,opacity:.8})));
+ box.add(new THREE.Mesh(bg,new THREE.MeshPhysicalMaterial({color:0xbfe3ff,transparent:true,opacity:.13,roughness:.04,side:THREE.DoubleSide,depthWrite:false})));
+ box.add(new THREE.LineSegments(new THREE.EdgesGeometry(bg),new THREE.LineBasicMaterial({color:0xdff3ff,transparent:true,opacity:.85})));
  const postGeo=new THREE.BoxGeometry(.13,1,.13);
  postGeo.translate(0,.5,0);
- [[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5]].forEach(([x,z])=>{
-  const p=new THREE.Mesh(postGeo,brass);p.position.set(x,0,z);p.castShadow=true;box.add(p);
- });
+ [[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5]].forEach(([x,z])=>{const p=new THREE.Mesh(postGeo,steel);p.position.set(x,0,z);box.add(p);});
  scene.add(box);
- [[0,-1.5,3.26,.13],[0,1.5,3.26,.13]].forEach(([x,z,w,d])=>{
-  const b=new THREE.Mesh(new THREE.BoxGeometry(w,.1,d),brass);b.position.set(x,.05,z);b.castShadow=true;scene.add(b);
- });
- [[-1.5,0],[1.5,0]].forEach(([x,z])=>{
-  const b=new THREE.Mesh(new THREE.BoxGeometry(.13,.1,3),brass);b.position.set(x,.05,z);b.castShadow=true;scene.add(b);
- });
+ [[0,-1.5,3.26,.13],[0,1.5,3.26,.13]].forEach(([x,z,w,d])=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,.1,d),steel);b.position.set(x,.05,z);scene.add(b);});
+ [[-1.5,0],[1.5,0]].forEach(([x,z])=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.13,.1,3),steel);b.position.set(x,.05,z);scene.add(b);});
 
- const liq=new THREE.Mesh(bg,new THREE.MeshStandardMaterial({color:0x2f8cff,transparent:true,opacity:.32,depthWrite:false}));
+ const liq=new THREE.Mesh(bg,new THREE.MeshStandardMaterial({color:0x2f8cff,transparent:true,opacity:.34,depthWrite:false}));
  liq.scale.set(.98,1,.98);
  scene.add(liq);
 
- // brass piston with a wooden knob
+ // steel piston, chrome rod, machined cap
  const piston=new THREE.Group();
- piston.add(new THREE.Mesh(new THREE.BoxGeometry(3.08,.18,3.08),brass));
- const rod=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,3,16),brass);
- rod.position.y=1.6;
- piston.add(rod);
- const knob=new THREE.Mesh(new THREE.SphereGeometry(.3,24,16),new THREE.MeshStandardMaterial({color:0x8a5a33,roughness:.55}));
- knob.position.y=3.2;
- piston.add(knob);
- shade(piston,true,false);
+ piston.add(new THREE.Mesh(new THREE.BoxGeometry(3.08,.18,3.08),new THREE.MeshStandardMaterial({color:0x3a4452,metalness:.75,roughness:.3})));
+ const rod=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,3,16),new THREE.MeshStandardMaterial({color:0xb8c4d0,metalness:.9,roughness:.2}));
+ rod.position.y=1.6;piston.add(rod);
+ const cap=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.32,28),steel);
+ cap.position.y=3.2;piston.add(cap);
  scene.add(piston);
-
- // little human touches on the bench: a mug, a notebook and a pencil
- const ceramic=new THREE.MeshStandardMaterial({color:0xf2e6d4,roughness:.5});
- const mug=new THREE.Group();
- mug.add(new THREE.Mesh(new THREE.CylinderGeometry(.4,.36,.58,28),ceramic));
- const handle=new THREE.Mesh(new THREE.TorusGeometry(.2,.05,10,20,Math.PI*1.3),ceramic);
- handle.position.set(.42,0,0);handle.rotation.z=-Math.PI*.65;
- mug.add(handle);
- const coffee=new THREE.Mesh(new THREE.CylinderGeometry(.33,.33,.02,28),new THREE.MeshStandardMaterial({color:0x4a2c1a,roughness:.3}));
- coffee.position.y=.27;
- mug.add(coffee);
- mug.position.set(3.5,.13,-1.9);
- shade(mug,true,true);
- scene.add(mug);
-
- const book=new THREE.Group();
- const cover=new THREE.Mesh(new THREE.BoxGeometry(1.5,.07,2),new THREE.MeshStandardMaterial({color:0x5d8a64,roughness:.7}));
- const pages=new THREE.Mesh(new THREE.BoxGeometry(1.38,.06,1.9),new THREE.MeshStandardMaterial({color:0xfaf3e3,roughness:.9}));
- pages.position.y=.06;
- book.add(cover,pages);
- const pencil=new THREE.Group();
- const body=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,1.2,10),new THREE.MeshStandardMaterial({color:0xe0a526,roughness:.5}));
- const tip=new THREE.Mesh(new THREE.ConeGeometry(.045,.16,10),new THREE.MeshStandardMaterial({color:0xd8b48a,roughness:.7}));
- tip.position.y=-.68;
- pencil.add(body,tip);
- pencil.rotation.z=Math.PI/2;pencil.rotation.y=.5;pencil.position.set(.1,.16,.2);
- book.add(pencil);
- book.position.set(-3.3,-.16+.035,1.6);
- book.rotation.y=.4;
- shade(book,true,true);
- scene.add(book);
 
  const mesh=new THREE.InstancedMesh(
   new THREE.SphereGeometry(.075,14,14),
-  new THREE.MeshStandardMaterial({roughness:.5,metalness:.02}),
+  new THREE.MeshStandardMaterial({roughness:.35,metalness:.05,emissive:0x1c1c1c}),
   N
  );
  mesh.frustumCulled=false;               // fixes particles vanishing at some camera angles
@@ -599,7 +576,7 @@ function init3D(){
  for(let i=0;i<N;i++){mesh.setColorAt(i,tmp);mesh.instanceMatrix.array[i*16+15]=1;}
  scene.add(mesh);
 
- return{ren,scene,cam,box,piston,liq,heater:coils[0],hl,mesh,
+ return{ren,scene,cam,box,piston,liq,heater:coils[0],hl,mesh,bloom,rings,
   M:mesh.instanceMatrix.array,C:mesh.instanceColor.array,
   pal:[0xcfeaff,0x3b8dff,0xff9a62].map(h=>new THREE.Color(h)),tmp,gb:-1,gc:[0,0,0]};
 }
@@ -713,6 +690,7 @@ function moveParticles(dt,dtv){
   bucket=Math.round(clamp((Tk-100)/900,0,1)*31);
   if(bucket!==g.gb){g.gb=bucket;g.tmp.setHSL(.58-.55*bucket/31,.62,.56);g.gc=[g.tmp.r,g.tmp.g,g.tmp.b];}
  }
+ const irB=Math.round(heatN*31),irC=RAMP[irB];
 
  for(let i=0;i<N;i++){
   let s=2;
@@ -739,11 +717,12 @@ function moveParticles(dt,dtv){
   const o=i*16,sc=i<n?Gp.s:0;
   M[o]=sc;M[o+5]=sc;M[o+10]=sc;M[o+12]=px[i];M[o+13]=py[i];M[o+14]=pz[i];
 
-  const key=st?s:3+bucket;
+  const key=IR?300+irB:st?s:3+bucket;
   if(key!==ck[i]){
    ck[i]=key;
    const c=st?g.pal[s]:null,j=i*3;
-   C[j]=c?c.r:g.gc[0];C[j+1]=c?c.g:g.gc[1];C[j+2]=c?c.b:g.gc[2];
+   if(IR){C[j]=irC[0];C[j+1]=irC[1];C[j+2]=irC[2];}
+   else{C[j]=c?c.r:g.gc[0];C[j+1]=c?c.g:g.gc[1];C[j+2]=c?c.b:g.gc[2];}
    g.mesh.instanceColor.needsUpdate=true;
   }
  }
@@ -759,25 +738,38 @@ function moveParticles(dt,dtv){
  g.heater.material.emissiveIntensity=gl*1.8;
  g.hl.color.set(hot?0xff7a35:0x6fb2ff);
  g.hl.intensity=gl*2.2;
+
+ // heat bloom + ripples follow the temperature colour
+ const hc=RAMP[Math.round(heatN*31)];
+ rippleT+=dtv*(.18+gl*.5);
+ g.bloom.material.color.setRGB(hc[0],hc[1],hc[2]);
+ g.bloom.material.opacity=.1+gl*.5;
+ g.rings.forEach((r,k)=>{
+  const p=(rippleT+k*.25)%1;
+  r.scale.setScalar(2.7+p*5.6);
+  r.material.color.setRGB(hc[0],hc[1],hc[2]);
+  r.material.opacity=(1-p)*(1-p)*.7*clamp(gl*1.5,0,1);
+ });
+ if(IR&&mode==='heat')g.liq.material.color.setRGB(irC[0],irC[1],irC[2]);
 }
 
 // ---------- TIMELINE DATA ----------
 const SERIES={
  gas:[
-  {n:'T',u:'K',c:'#c4552d',g:0,d:0,f:()=>S.T},
-  {n:'P',u:'kPa',c:'#3f6c9a',g:1,d:1,f:()=>S.n*R*S.T/(S.V/1000)/1000},
-  {n:'V',u:'L',c:'#5d8a64',g:2,d:1,f:()=>S.V}
+  {n:'T',u:'K',c:'#ff7a4d',g:0,d:0,f:()=>S.T},
+  {n:'P',u:'kPa',c:'#5ad1e6',g:1,d:1,f:()=>S.n*R*S.T/(S.V/1000)/1000},
+  {n:'V',u:'L',c:'#8ee3a4',g:2,d:1,f:()=>S.V}
  ],
  heat:[
-  {n:'T',u:'°C',c:'#c4552d',g:0,d:1,f:()=>D.st.T},
-  {n:'Q',u:'kJ',c:'#3f6c9a',g:1,d:0,f:()=>S.Q},
-  {n:'Stage',u:'',c:'#8a5a83',g:2,d:1,f:()=>D.st.i+D.st.f}
+  {n:'T',u:'°C',c:'#ff7a4d',g:0,d:1,f:()=>D.st.T},
+  {n:'Q',u:'kJ',c:'#5ad1e6',g:1,d:0,f:()=>S.Q},
+  {n:'Stage',u:'',c:'#c49bff',g:2,d:1,f:()=>D.st.i+D.st.f}
  ],
  law:[
-  {n:'Q',u:'kJ',c:'#c4552d',g:0,d:1,f:()=>S.fq},
-  {n:'W',u:'kJ',c:'#3f6c9a',g:0,d:1,f:()=>S.fw},
-  {n:'ΔU',u:'kJ',c:'#5d8a64',g:0,d:1,f:()=>S.fq-S.fw},
-  {n:'T',u:'K',c:'#c98a12',g:1,d:0,f:()=>D.Tk}
+  {n:'Q',u:'kJ',c:'#ff7a4d',g:0,d:1,f:()=>S.fq},
+  {n:'W',u:'kJ',c:'#5ad1e6',g:0,d:1,f:()=>S.fw},
+  {n:'ΔU',u:'kJ',c:'#8ee3a4',g:0,d:1,f:()=>S.fq-S.fw},
+  {n:'T',u:'K',c:'#ffc14a',g:1,d:0,f:()=>D.Tk}
  ]
 };
 const MAXS=480;
@@ -808,7 +800,7 @@ function drawTL(){
  tlDirty=false;
  const c=$('tlc');
  if(!c.clientWidth||!TL.length)return;
- const g=c.getContext('2d'),W=c.width,H=c.height,k=W/c.clientWidth,C=colors();
+ const g=c.getContext('2d'),W=c.width,H=c.height,k=W/c.clientWidth,C=SCR;
  const L=6*k,Rt=8*k,Tp=8*k,B=18*k,pw=W-L-Rt,ph2=H-Tp-B;
  g.clearRect(0,0,W,H);
  g.lineWidth=1;g.strokeStyle=C.bd;
@@ -825,9 +817,9 @@ function drawTL(){
  ser.forEach((s,j)=>{
   const pad=Math.max((hi[s.g]-lo[s.g])*.08,1e-6),a=lo[s.g]-pad,b=hi[s.g]+pad;
   const X=t=>L+(t-t0)/span*pw,Y=x=>Tp+(1-(x-a)/(b-a))*ph2;
-  g.strokeStyle=s.c;g.lineWidth=2.2*k;g.beginPath();
+  g.strokeStyle=s.c;g.lineWidth=2.2*k;g.shadowColor=s.c;g.shadowBlur=9*k;g.beginPath();
   TL.forEach((r,i)=>{i?g.lineTo(X(r[0]),Y(r[j+1])):g.moveTo(X(r[0]),Y(r[j+1]));});
-  g.stroke();
+  g.stroke();g.shadowBlur=0;
   const e=TL[TL.length-1];
   g.fillStyle=s.c;g.beginPath();g.arc(X(e[0]),Y(e[j+1]),3.2*k,0,7);g.fill();
  });
@@ -845,7 +837,7 @@ function updateLegend(){
 
 // ---------- HUD ----------
 function hud(){
- const c=$('hudc'),g=c.getContext('2d'),W=c.width,H=c.height,C=colors();
+ const c=$('hudc'),g=c.getContext('2d'),W=c.width,H=c.height,C=SCR;
  g.clearRect(0,0,W,H);
  let t='';
 
@@ -873,16 +865,16 @@ Heat  ${S.Q.toFixed(0)} / ${st.E[5].toFixed(0)} kJ`+
   g.strokeStyle=C.mut;g.lineWidth=2;
   g.beginPath();g.moveTo(30,10);g.lineTo(30,H-25);g.lineTo(W-10,H-25);g.stroke();
 
-  ['#6f9cc4','#5d8a64','#3f6c9a','#5d8a64','#c4552d'].forEach((c,i)=>{
+  ['#7fb7ff','#8ee3a4','#5ad1e6','#8ee3a4','#ff7a4d'].forEach((c,i)=>{
    g.strokeStyle=c;g.lineWidth=5;
    g.beginPath();g.moveTo(X(E[i]),Y(Tt[i]));g.lineTo(X(E[i+1]),Y(Tt[i+1]));g.stroke();
   });
 
   const tg=state(clamp(v.q,0,E[5]));            // hollow ring = target
-  g.strokeStyle='#b8453f';g.lineWidth=3;
+  g.strokeStyle='#ffc14a';g.lineWidth=3;
   g.beginPath();g.arc(X(Math.min(v.q,E[5])),Y(tg.T),11,0,7);g.stroke();
-  g.fillStyle='#b8453f';
-  g.beginPath();g.arc(X(Math.min(S.Q,E[5])),Y(st.T),9,0,7);g.fill();
+  g.fillStyle='#fff1c2';g.shadowColor='#ffb23e';g.shadowBlur=14;
+  g.beginPath();g.arc(X(Math.min(S.Q,E[5])),Y(st.T),9,0,7);g.fill();g.shadowBlur=0;
  }
  else{
   const du=S.fq-S.fw,dT=du*1000/(1.5*S.fn*R);
@@ -891,7 +883,7 @@ Heat  ${S.Q.toFixed(0)} / ${st.E[5].toFixed(0)} kJ`+
 Gas ${du>0?'warms up':du<0?'cools down':'steady'}
 ΔT = ${dT.toFixed(1)} K`;
 
-  [[S.fq,'#c4552d','Q'],[S.fw,'#3f6c9a','W'],[du,'#5d8a64','ΔU']].forEach(([x,c,l],i)=>{
+  [[S.fq,'#ff7a4d','Q'],[S.fw,'#5ad1e6','W'],[du,'#8ee3a4','ΔU']].forEach(([x,c,l],i)=>{
    const h=x/110*(H/2-30),bx=40+i*140;
    g.fillStyle=c;
    g.fillRect(bx,h>=0?H/2-h:H/2,90,Math.abs(h));
@@ -902,6 +894,28 @@ Gas ${du>0?'warms up':du<0?'cools down':'steady'}
   g.fillRect(20,H/2-1,W-40,2);
  }
  $('hudt').textContent=t;
+}
+
+// ---------- THERMOMETER + HEAT-REACTIVE THEME ----------
+function heatTarget(){                  // 0 (cold) .. 1 (hot) for the current model
+ if(mode==='gas')return clamp((S.T-100)/900,0,1);
+ if(mode==='heat'){const t=D.st.Tt;return clamp((D.st.T-t[0])/(t[5]-t[0]),0,1);}
+ return clamp((D.Tk-100)/1400,0,1);
+}
+function buildGauge(){
+ let lo='100 K',hi='1000 K',marks=[];
+ if(mode==='heat'){
+  const t=stages().Tt,span=t[5]-t[0];
+  lo=t[0].toFixed(0)+' °C';hi=t[5].toFixed(0)+' °C';
+  marks=[['MELT',(t[1]-t[0])/span],['BOIL',(t[3]-t[0])/span]];
+ }else if(mode==='law')hi='1500 K';
+ $('gmin').textContent=lo;$('gmax').textContent=hi;
+ $('gmarks').innerHTML=marks.map(m=>`<span style="bottom:${(m[1]*100).toFixed(1)}%">${m[0]}</span>`).join('');
+}
+function updateHeat(){
+ heatN+=(heatTarget()-heatN)*.35;
+ document.documentElement.style.setProperty('--heat',heatN.toFixed(3));
+ $('gval').textContent=mode==='heat'?D.st.T.toFixed(0)+' °C':(mode==='gas'?S.T:D.Tk).toFixed(0)+' K';
 }
 
 // ---------- MAIN TICK ----------
@@ -916,6 +930,7 @@ function tick(dt){                       // dt = real seconds (0 = refresh witho
  const now=performance.now();
  if(!dt||now-lastHud>90){
   lastHud=now;
+  updateHeat();
   hud();
   updateLegend();
   $('clock').textContent=`${simT.toFixed(1)} s · ×${TS}${paused?' · paused':''}`;
@@ -937,7 +952,7 @@ function updateExplanation(k){
 }
 
 function applyPalette(){                 // particle and liquid colours follow the chosen material
- if(!G3||mode!=='heat')return;
+ if(!G3||mode!=='heat'||IR)return;
  const m=SUB[opt]||SUB.Water;
  G3.pal=m.pal.map(h=>new THREE.Color(h));
  G3.liq.material.color.setHex(m.liq);
@@ -949,6 +964,7 @@ function resetRun(){
  else if(mode==='heat'){S.Q=0;}
  else{S.fq=0;S.fw=0;S.fn=v.fn;}
  buildLegend();
+ buildGauge();
  applyPalette();
  initP();
  dirty=true;
@@ -1061,6 +1077,14 @@ $('bPause').onclick=e=>{
  paused=!paused;
  e.target.classList.toggle('on',paused);
  e.target.textContent=paused?'Resume':'Pause';
+ dirty=true;
+};
+
+$('bIR').onclick=e=>{
+ IR=!IR;
+ e.target.classList.toggle('on',IR);
+ ck.fill(-1);
+ if(!IR)applyPalette();
  dirty=true;
 };
 
