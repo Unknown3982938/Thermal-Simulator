@@ -44,4 +44,4 @@ Published simulation URL:  https://unknown3982938.github.io/Thermal-Simulator/
 
 ## License
 
-GNU-GPL-v3.0
+MIT License
