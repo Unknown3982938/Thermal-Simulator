@@ -9,7 +9,7 @@ A static, browser-based thermodynamics learning project built as a Physics 2 sch
 - **Achievements** — Locally tracked milestones as you explore.
 - **Learning Resources** — Tutorial, references, and about pages to support the project.
 - **Easter Egg** — Type `THERMO` on any page (outside a text field) or click the laboratory brand mark seven times to reveal a hidden surprise.
-- **Built-in python Calculator**
+- **Built-in python Calculator** - A convenient tool for calculating values and variables.
 
 ## Pages
 
@@ -40,7 +40,7 @@ This is a static site — GitHub Pages can host it without a backend.
 
 Published simulation URL:  https://unknown3982938.github.io/Thermal-Simulator/
 
-> **Note:** The 3D simulation loads Three.js from a CDN, so an internet connection is required for that page to work.
+> **Note:** The 3D simulation loads Three.js from a CDN, so an internet connection is required for that page to work. Additionally, this repo is not intended for commercial use - it is intended for personal school project.
 
 ## License
 
