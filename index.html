@@ -7,223 +7,150 @@
 <title>Thermo Lab 3D</title>
 
 <style>
+/* Thermo Lab 3D: simulator page. Tokens come from extras.css; fallbacks keep it usable on its own. */
 :root{
- --b1:#eef3ff;--b2:#b9ccf0;--glass:rgba(255,255,255,.66);
- --bd:rgba(40,60,100,.2);--fg:#12203a;--mut:#51637f;
- --a1:#ff6a2a;--a2:#ffb347;
- box-sizing:border-box;
-}
-@media (prefers-color-scheme:dark){
- :root:not([data-theme="light"]){
-  --b1:#1b2a52;--b2:#080d1c;--glass:rgba(18,28,56,.7);
-  --bd:rgba(160,190,255,.22);--fg:#e9f0ff;--mut:#9db0d3
- }
-}
-:root[data-theme="dark"]{
- --b1:#1b2a52;--b2:#080d1c;--glass:rgba(18,28,56,.7);
- --bd:rgba(160,190,255,.22);--fg:#e9f0ff;--mut:#9db0d3
-}
+ --glass:var(--card,#fffdf8);--bd:var(--line,#e3d6c1);--fg:var(--ink,#2d2620);--mut:var(--ink2,#6b5f52);
+ --a1:var(--clay,#c4552d);--a2:var(--mustard,#c98a12);
+ --stage1:#ffe6bf;--stage2:#f3dcb9;--track:color-mix(in srgb,var(--fg) 14%,var(--paper2,#f3eadb));
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--stage1:#5a3d27;--stage2:#241c16}}
+*,*::before,*::after{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden}
-body{
- background:radial-gradient(ellipse at 60% 30%,var(--b1),var(--b2));
- color:var(--fg);
- font:14px system-ui,-apple-system,"Segoe UI",sans-serif
-}
-#app{display:grid;grid-template-columns:310px 1fr;height:100%}
-aside{
- background:var(--glass);backdrop-filter:blur(16px);
- -webkit-backdrop-filter:blur(16px);border-right:1px solid var(--bd);
- padding:16px;overflow:auto;box-shadow:6px 0 30px rgba(0,0,0,.18)
-}
-.brand{display:flex;gap:10px;align-items:center;margin-bottom:14px}
-.logo{font-size:26px;filter:drop-shadow(0 0 8px var(--a1))}
-h1{font-size:1.1rem;margin:0}
-small,.note{color:var(--mut)}
-.sec{
- font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
- color:var(--mut);margin:16px 0 8px;display:flex;
- justify-content:space-between
-}
-.card{
- display:flex;gap:10px;align-items:center;width:100%;
- margin-bottom:8px;padding:10px 12px;border:1px solid var(--bd);
- border-radius:14px;background:transparent;color:var(--fg);
- cursor:pointer;text-align:left;transition:.2s
-}
-.card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.2)}
-.card .i{font-size:22px}
-.card small{display:block;color:inherit;opacity:.75}
-.card.on{
- background:linear-gradient(135deg,var(--a1),var(--a2));
- color:#fff;border-color:transparent;
- box-shadow:0 10px 24px rgba(255,106,42,.4);
- transform:translateX(4px)
-}
-select{
- width:100%;padding:9px;border-radius:10px;
- border:1px solid var(--bd);background:var(--glass);
- color:var(--fg);font-size:.95rem
-}
-.sl{margin-top:12px}
-.sl label{display:flex;justify-content:space-between;margin-bottom:7px}
-input[type=range]{
- -webkit-appearance:none;appearance:none;width:100%;height:8px;
- border-radius:8px;outline:none;
- background:linear-gradient(90deg,var(--a1),var(--a2))
-  0 0/var(--p,50%) 100% no-repeat,var(--bd)
-}
-input[type=range]::-webkit-slider-thumb{
- -webkit-appearance:none;width:24px;height:24px;border-radius:50%;
- background:radial-gradient(circle at 35% 30%,#fff,#ffd9c7);
- border:3px solid var(--a1);
- box-shadow:0 3px 10px rgba(0,0,0,.4),0 0 0 5px rgba(255,106,42,.18)
-}
-input[type=range]::-moz-range-thumb{
- width:20px;height:20px;border-radius:50%;background:#fff;
- border:3px solid var(--a1);box-shadow:0 3px 10px rgba(0,0,0,.4)
-}
-.tog{display:flex;gap:6px}
-.tog button{
- flex:1;padding:9px 4px;border-radius:10px;
- border:1px solid var(--bd);background:transparent;
- color:var(--fg);cursor:pointer
-}
-.tog button.on{background:var(--a1);color:#fff;border-color:var(--a1)}
-#explain{
- margin-top:18px;padding:13px;border:1px solid var(--bd);
- border-radius:14px;background:var(--glass);line-height:1.55
-}
-#explain h3{font-size:.9rem;margin:0 0 7px;color:var(--fg)}
-#explain p{font-size:.82rem;margin:6px 0;color:var(--mut)}
-#explain .formula{
- display:block;margin-top:9px;padding:9px;border-radius:9px;
- background:rgba(255,106,42,.10);color:var(--fg);
- font-family:Consolas,monospace;font-size:.85rem
-}
-#stage{position:relative;min-height:0;touch-action:none;cursor:grab}
+body{font:15px/1.5 var(--sans,system-ui,sans-serif);color:var(--fg)}
+small{color:var(--mut)}
+
+#app{display:grid;grid-template-columns:350px minmax(0,1fr);height:100%}
+
+/* ---------- the notebook (sidebar) ---------- */
+aside{position:relative;overflow:auto;padding:22px 22px 30px 42px;border-right:1px solid var(--bd);
+ background:radial-gradient(circle at 18px 19px,var(--paper,#fbf6ec) 5.5px,var(--bd) 6px,transparent 6.5px) 0 0/36px 38px repeat-y local,var(--glass);
+ box-shadow:10px 0 34px -20px rgba(70,40,10,.45)}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:4px}
+.logo{width:46px;height:46px;flex:none;display:grid;place-items:center;border-radius:50%;font-size:24px;transform:rotate(-6deg);
+ background:var(--clay-soft,#f6dccd);border:2px solid color-mix(in srgb,var(--a1) 45%,transparent)}
+h1{font-size:1.45rem;margin:0;line-height:1.1}
+.tag{margin:8px 0 0;font-size:.88rem;color:var(--mut)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:24px 0 11px;padding-bottom:6px;
+ border-bottom:2px dotted var(--bd);font-family:var(--serif,Georgia,serif);font-size:1.04rem;font-weight:700}
+.sec span:last-child{font:600 .78rem ui-monospace,Consolas,monospace;color:var(--a1)}
+
+.exp{display:flex;gap:12px;align-items:center;width:100%;margin-bottom:9px;padding:11px 13px;border:1px solid var(--bd);
+ border-radius:16px 18px 16px 20px;background:var(--paper,#fbf6ec);color:var(--fg);cursor:pointer;text-align:left;font:inherit;
+ box-shadow:0 2px 0 var(--bd);transition:transform .18s,box-shadow .18s,background .18s}
+.exp:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--bd)}
+.exp .i{width:42px;height:42px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--glass);border:1px solid var(--bd);font-size:21px}
+.exp small{display:block;font-size:.78rem}
+.exp.on{background:var(--clay-soft,#f6dccd);border-color:var(--a1);box-shadow:0 3px 0 var(--a1);transform:rotate(-.5deg)}
+.exp.on .i{background:var(--a1);border-color:var(--a1)}
+
+select{width:100%;padding:11px 38px 11px 14px;border-radius:14px;border:1px solid var(--bd);color:var(--fg);font:inherit;
+ -webkit-appearance:none;appearance:none;box-shadow:0 2px 0 var(--bd);
+ background:var(--glass) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1.5l6 6 6-6' fill='none' stroke='%23c4552d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center}
+
+.sl{margin-top:15px}
+.sl label{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;font-size:.92rem}
+.sl b{font-weight:700;font-variant-numeric:tabular-nums;font-size:.84rem;padding:1px 11px;border-radius:999px;background:var(--paper,#fbf6ec);border:1px solid var(--bd)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:99px;outline:none;cursor:pointer;
+ background:linear-gradient(90deg,var(--a1),var(--a2)) 0 0/var(--p,50%) 100% no-repeat,var(--track);
+ box-shadow:inset 0 2px 3px rgba(60,35,10,.35),0 1px 0 rgba(255,255,255,.35)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;cursor:grab;
+ background:radial-gradient(circle,var(--a1) 0 5px,transparent 5.5px),radial-gradient(circle at 35% 30%,#fff,#f1e3cc 75%);
+ border:2px solid var(--a1);box-shadow:0 3px 0 rgba(90,50,20,.38),0 8px 12px -2px rgba(90,50,20,.28);transition:transform .12s}
+input[type=range]::-webkit-slider-thumb:active{transform:scale(1.12);cursor:grabbing}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff3de;border:2px solid var(--a1);box-shadow:0 3px 0 rgba(90,50,20,.38)}
+
+.chips{display:flex;gap:8px;margin-top:13px}
+.tog{display:flex;gap:8px}
+#tf .tog{margin-top:11px}
+.tog button,.chips button{flex:1;padding:10px 6px;border-radius:999px;border:1px solid var(--bd);background:var(--glass);color:var(--fg);
+ font:600 .86rem var(--sans,system-ui,sans-serif);cursor:pointer;box-shadow:0 3px 0 var(--bd);transition:transform .12s,box-shadow .12s}
+.tog button:active,.chips button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--bd)}
+.tog button.on,.chips button.on{background:var(--a1);color:#fff;border-color:color-mix(in srgb,var(--a1) 70%,#000);box-shadow:0 3px 0 color-mix(in srgb,var(--a1) 62%,#000)}
+.hintline{font-size:.8rem;margin:11px 0 0;color:var(--mut);line-height:1.5}
+#clock{font-variant-numeric:tabular-nums}
+
+/* sticky note that explains the model */
+#explain{position:relative;margin:28px 2px 6px;padding:20px 16px 14px;line-height:1.55;transform:rotate(.4deg);
+ background:color-mix(in srgb,var(--a2) 17%,var(--glass));border:1px solid color-mix(in srgb,var(--a2) 40%,var(--bd));
+ border-radius:6px 6px 16px 6px;box-shadow:0 10px 18px -10px rgba(80,50,10,.45)}
+#explain::before{content:"";position:absolute;top:-11px;left:50%;width:86px;height:22px;transform:translateX(-50%) rotate(-2deg);
+ background:color-mix(in srgb,var(--a1) 24%,transparent);border:1px solid color-mix(in srgb,var(--a1) 30%,transparent)}
+.kicker{display:block;font:700 .74rem var(--sans,system-ui,sans-serif);color:var(--a1);margin-bottom:3px}
+#explain h3{font-size:1.04rem;margin:0 0 6px}
+#explain p{font-size:.86rem;margin:6px 0;color:var(--mut)}
+#explain .formula{display:block;margin-top:10px;padding:9px 10px;border-radius:10px;background:var(--glass);color:var(--fg);font:600 .88rem ui-monospace,Consolas,monospace}
+
+/* ---------- the bench (stage) ---------- */
+#stage{position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden;
+ background:radial-gradient(80% 70% at 64% 16%,var(--stage1),transparent 72%),linear-gradient(var(--stage2),var(--paper,#fbf6ec))}
+#stage:active{cursor:grabbing}
 #gl{display:block;width:100%;height:100%}
-#hud{
- position:absolute;top:12px;right:12px;
- width:min(260px,calc(100% - 24px));padding:12px;
- border-radius:16px;background:var(--glass);
- backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
- border:1px solid var(--bd);box-shadow:0 12px 30px rgba(0,0,0,.25);
- pointer-events:none
-}
-#hudt{
- font-family:Consolas,monospace;font-size:.8rem;
- white-space:pre-line;line-height:1.5
-}
+
+#hud{position:absolute;top:18px;right:18px;width:min(270px,calc(100% - 36px));padding:22px 16px 14px;pointer-events:none;
+ background:color-mix(in srgb,var(--a2) 26%,var(--glass));border:1px solid color-mix(in srgb,var(--a2) 45%,var(--bd));
+ border-radius:4px 4px 18px 4px;box-shadow:0 14px 22px -10px rgba(80,50,10,.5);transform:rotate(1.2deg)}
+#hud::before{content:"Right now";position:absolute;top:6px;left:14px;font:700 .72rem var(--sans,system-ui,sans-serif);color:var(--a1)}
+#hudt{font:.82rem/1.55 ui-monospace,Consolas,monospace;white-space:pre-line;color:var(--fg)}
 #hudc{width:100%;margin-top:8px}
 
-/* ---------- FLOATING SITE NAVIGATION ---------- */
-#site-nav-toggle{
- position:fixed;right:18px;bottom:18px;z-index:10002;
- width:54px;height:54px;border:1px solid rgba(255,255,255,.25);
- border-radius:18px;background:linear-gradient(135deg,var(--a1),var(--a2));
- color:white;font-size:25px;cursor:pointer;
- box-shadow:0 8px 25px rgba(0,0,0,.35);
- display:grid;place-items:center;
- transition:transform .2s,box-shadow .2s
-}
-#site-nav-toggle:hover{
- transform:translateY(-3px);
- box-shadow:0 12px 30px rgba(255,106,42,.35)
-}
-#site-nav-backdrop{
- position:fixed;inset:0;z-index:10000;
- background:rgba(3,8,20,.55);
- backdrop-filter:blur(4px);
- opacity:0;visibility:hidden;transition:.25s
-}
-#site-nav{
- position:fixed;z-index:10001;
- right:18px;bottom:84px;
- width:min(300px,calc(100vw - 36px));
- padding:16px;border:1px solid var(--bd);
- border-radius:20px;background:var(--glass);
- color:var(--fg);
- backdrop-filter:blur(22px);
- -webkit-backdrop-filter:blur(22px);
- box-shadow:0 18px 50px rgba(0,0,0,.35);
- opacity:0;visibility:hidden;
- transform:translateY(12px) scale(.97);
- transform-origin:bottom right;
- transition:opacity .22s,transform .22s,visibility .22s
-}
-body.nav-open #site-nav-backdrop{
- opacity:1;visibility:visible
-}
-body.nav-open #site-nav{
- opacity:1;visibility:visible;
- transform:translateY(0) scale(1)
-}
-.nav-brand{
- display:flex;align-items:center;gap:10px;
- padding:4px 4px 14px;
- border-bottom:1px solid var(--bd);
- margin-bottom:12px
-}
-.nav-brand-icon{font-size:25px}
-.nav-brand strong{display:block;font-size:1rem}
-.nav-brand small{font-size:.75rem}
-.nav-link{
- display:flex;align-items:center;gap:12px;
- width:100%;padding:12px;
- margin:4px 0;border:1px solid transparent;
- border-radius:12px;background:transparent;
- color:var(--fg);text-decoration:none;
- font:inherit;text-align:left;cursor:pointer;
- transition:background .2s,border-color .2s
-}
-.nav-link:hover{
- background:rgba(255,106,42,.10);
- border-color:var(--bd)
-}
-.nav-link.active{
- background:linear-gradient(135deg,var(--a1),var(--a2));
- color:white;font-weight:650;
- box-shadow:0 5px 16px rgba(255,106,42,.2)
-}
-.nav-icon{
- width:25px;text-align:center;font-size:19px
-}
-.nav-footer{
- margin-top:12px;padding-top:12px;
- border-top:1px solid var(--bd);
- color:var(--mut);font-size:.72rem;text-align:center
-}
-@media(max-width:760px){
- #app{grid-template-columns:1fr;grid-template-rows:44% 56%}
- #stage{order:1}
- aside{order:2;border-right:0;border-top:1px solid var(--bd)}
- #hud{width:170px;padding:8px}
- #hudt{font-size:.7rem}
- #hudc{display:none!important}
- #site-nav-toggle{right:14px;bottom:14px}
- #site-nav{right:14px;bottom:78px}
-}
-
-/* ---------- TIME FRAME + TIMELINE (v2) ---------- */
-.chips{display:flex;gap:6px;margin-top:10px}
-.chips button{flex:1;padding:8px 0;border-radius:10px;border:1px solid var(--bd);background:transparent;color:var(--fg);cursor:pointer;font-weight:700}
-.chips button.on{background:var(--a1);color:#fff;border-color:var(--a1)}
-#tf .tog{margin-top:8px}
-#clock{font-family:Consolas,monospace;text-transform:none;letter-spacing:0;color:var(--fg)}
-#tf .hint{font-size:.74rem;margin:8px 0 0;line-height:1.45}
-#tl{position:absolute;left:12px;bottom:12px;width:min(580px,calc(100% - 190px));padding:8px 10px;border-radius:16px;
- background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--bd);
- box-shadow:0 12px 30px rgba(0,0,0,.25);cursor:default}
-#tlh{display:flex;align-items:center;gap:8px;font-size:.78rem}
-#tlLeg{flex:1;display:flex;flex-wrap:wrap;gap:2px 10px;font:11px Consolas,monospace;color:var(--mut)}
-#tlLeg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
-#tlLeg b{color:var(--fg);font-weight:600}
-#tlBtn{border:0;background:transparent;color:var(--fg);font-size:16px;cursor:pointer;transition:transform .2s;padding:2px 6px}
+/* graph paper timeline */
+#tl{position:absolute;left:18px;bottom:18px;width:min(600px,calc(100% - 200px));padding:10px 14px 8px;cursor:default;
+ border-radius:18px 20px 18px 22px;border:1px solid var(--bd);box-shadow:0 14px 24px -14px rgba(80,50,10,.5);
+ background-color:var(--glass);background-size:20px 20px;background-position:-1px -1px;
+ background-image:linear-gradient(color-mix(in srgb,var(--bd) 65%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--bd) 65%,transparent) 1px,transparent 1px)}
+#tlh{display:flex;align-items:center;gap:10px;font-size:.84rem}
+#tlh b{font-family:var(--serif,Georgia,serif);font-size:.98rem;white-space:nowrap}
+#tlLeg{flex:1;display:flex;flex-wrap:wrap;gap:3px 8px;font:11.5px ui-monospace,Consolas,monospace;color:var(--mut)}
+#tlLeg span{padding:1px 9px;border-radius:99px;background:var(--glass);border:1px solid var(--bd)}
+#tlLeg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+#tlLeg b{color:var(--fg);font-weight:700}
+#tlBtn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bd);background:var(--glass);color:var(--fg);font-size:14px;cursor:pointer;transition:transform .2s}
 #tlc{display:block;width:100%;height:120px;margin-top:6px}
 #tl.min #tlc{display:none}
 #tl.min #tlBtn{transform:rotate(180deg)}
 #no3d{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--mut);line-height:1.5;pointer-events:none}
-@media (max-width:760px){#tl{width:calc(100% - 24px)}}
+
+/* ---------- floating menu ---------- */
+#site-nav-toggle{position:fixed;right:18px;bottom:18px;z-index:10002;width:54px;height:54px;display:grid;place-items:center;font-size:24px;cursor:pointer;transition:transform .2s}
+#site-nav-toggle:hover{transform:translateY(-3px) rotate(-4deg)}
+#site-nav-backdrop{position:fixed;inset:0;z-index:10000;opacity:0;visibility:hidden;transition:.25s}
+#site-nav{position:fixed;z-index:10001;right:18px;bottom:84px;width:min(310px,calc(100vw - 36px));padding:16px;
+ border:1px solid var(--bd);border-radius:22px 24px 22px 26px;background:var(--glass);color:var(--fg);-webkit-backdrop-filter:none;backdrop-filter:none;
+ box-shadow:0 22px 50px -18px rgba(70,40,10,.55);opacity:0;visibility:hidden;transform:translateY(12px) scale(.97);transform-origin:bottom right;
+ transition:opacity .22s,transform .22s,visibility .22s}
+body.nav-open #site-nav-backdrop{opacity:1;visibility:visible}
+body.nav-open #site-nav{opacity:1;visibility:visible;transform:none}
+.nav-brand{display:flex;align-items:center;gap:10px;padding:4px 4px 14px;border-bottom:2px dotted var(--bd);margin-bottom:12px}
+.nav-brand-icon{font-size:25px}
+.nav-brand strong{display:block;font-size:1.05rem}
+.nav-brand small{font-size:.75rem}
+.nav-link{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;margin:3px 0;border:1px solid transparent;border-radius:14px;
+ background:transparent;color:var(--fg);text-decoration:none;font:inherit;text-align:left;cursor:pointer;transition:background .2s,border-color .2s}
+.nav-icon{width:25px;text-align:center;font-size:19px}
+.nav-footer{margin-top:12px;padding-top:12px;border-top:2px dotted var(--bd);color:var(--mut);font-size:.74rem;text-align:center}
+
+/* the calculator add-on follows the same look */
+html body #calc-toggle{background:var(--glass);color:var(--fg);border:1px solid var(--bd);border-radius:50%;box-shadow:var(--shadow,0 8px 20px rgba(70,40,10,.3))}
+html body #calc-toggle:hover{background:var(--clay-soft,#f6dccd);box-shadow:var(--shadow-hover,0 10px 24px rgba(70,40,10,.4))}
+html body #calc-toggle[aria-expanded="true"]{background:var(--a1);color:#fff;border-color:var(--a1)}
+html body #calc-panel{border-radius:24px 26px 24px 28px;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 24px 50px -18px rgba(70,40,10,.6)}
+html body .calc-grid button{border-radius:14px;box-shadow:0 2px 0 var(--bd)}
+
+@media (max-width:760px){
+ #app{grid-template-columns:minmax(0,1fr);grid-template-rows:44% 56%}
+ #stage{order:1}
+ aside{order:2;border-right:0;border-top:1px solid var(--bd);padding-left:40px}
+ #hud{width:178px;padding:20px 10px 10px;top:12px;right:12px}
+ #hudt{font-size:.7rem}
+ #hudc{display:none!important}
+ #tl{width:calc(100% - 24px);left:12px;bottom:12px}
+ #tlh{flex-wrap:wrap;gap:6px 8px}
+ #tlh b{flex:1;min-width:0}
+ #tlLeg{order:3;flex:1 0 100%}
+ #site-nav-toggle{right:14px;bottom:14px}
+ #site-nav{right:14px;bottom:78px}
+}
+@media (prefers-reduced-motion:reduce){.exp.on,#explain,#hud{transform:none}}
 </style>
 <link rel="stylesheet" href="extras.css">
 </head>
@@ -233,17 +160,18 @@ body.nav-open #site-nav{
 <aside>
  <div class="brand">
   <span class="logo">🔥</span>
-  <div><h1>Thermo Lab 3D</h1><small>Interactive heat transfer model</small></div>
+  <h1>Thermo Lab 3D</h1>
  </div>
+ <p class="tag">A little lab for poking at heat, gas and energy. Slide something and watch what happens.</p>
 
- <div class="sec">Models</div>
+ <div class="sec">Pick an experiment</div>
  <div id="cards"></div>
 
- <div class="sec"><span>Parameters</span><span id="eq"></span></div>
+ <div class="sec"><span>Set it up</span><span id="eq"></span></div>
  <div id="optrow"><select id="opt"></select></div>
  <div id="sl"></div>
 
- <div class="sec"><span>Time frame</span><span id="clock">t = 0.0 s</span></div>
+ <div class="sec"><span>Time</span><span id="clock">0.0 s</span></div>
  <div id="tf">
   <div class="sl">
    <label><span>Simulation speed</span><b id="ts_o">×1</b></label>
@@ -259,18 +187,18 @@ body.nav-open #site-nav{
    <button id="bJump">Jump to target</button>
    <button id="bCsv">Export CSV</button>
   </div>
-  <p class="note hint">Sliders set the target. The system moves toward it over time, and the timeline graph records every change.</p>
+  <p class="hintline">Move a slider and the lab eases toward it, so you can see what changes. The graph on the bench keeps a record.</p>
  </div>
 
  <div id="explain"></div>
 
- <div class="sec">View</div>
+ <div class="sec">Look around</div>
  <div class="tog">
-  <button id="bAuto" class="on">Auto-rotate</button>
+  <button id="bAuto" class="on">Spin</button>
   <button id="bPause">Pause</button>
-  <button id="bReset">Reset</button>
+  <button id="bReset">Start over</button>
  </div>
- <p class="note">Drag to rotate, scroll to zoom.</p>
+ <p class="hintline">Drag to turn the bench around. Scroll or pinch to zoom.</p>
 </aside>
 
 <div id="stage">
@@ -280,7 +208,7 @@ body.nav-open #site-nav{
  </div>
  <div id="tl">
   <div id="tlh">
-   <b>Timeline</b>
+   <b>Your experiment so far</b>
    <span id="tlLeg"></span>
    <button id="tlBtn" type="button" aria-label="Collapse timeline" aria-expanded="true">▾</button>
   </div>
@@ -447,26 +375,26 @@ const MODELS={
  }
 };
 
-const MORE=' Sliders set the target values; the system moves toward them over time, and the Time frame controls speed that up.';
+const MORE=' Move a slider and the lab eases toward it over time. The Time controls make that faster.';
 const EXPLANATIONS={
  gas:{
   title:'Gas Laws',
-  body:'This model demonstrates how pressure, volume, temperature, and the amount of gas are related. Change the sliders and observe how the gas particles behave inside the container.'+MORE,
-  detail:'Increasing temperature makes the particles move faster. Changing the volume changes the available space.',
+  body:'Squeeze it, heat it, add more gas, and watch the particles react. Pressure, volume, temperature and the amount of gas are all tied together.'+MORE,
+  detail:'Hotter gas means faster particles. A smaller container leaves them less room, so they hit the walls more often.',
   formula:'PV = nRT',
   terms:'P = pressure · V = volume · n = amount of gas · R = gas constant · T = absolute temperature'
  },
  heat:{
   title:'Phase Change',
-  body:'This model follows a substance as heat is added. The material can warm up, melt, warm as a liquid, boil, and finally warm as a gas.'+MORE,
-  detail:'During melting and boiling, energy is used for the phase change. The temperature remains constant during these idealized transitions. Material constants are rounded averages, so real values vary with temperature.',
+  body:'Pour heat into a material and follow what happens. It warms up, melts, warms up again as a liquid, boils, and finally keeps warming as a gas.'+MORE,
+  detail:'While it melts or boils, all the energy goes into the change itself, so the temperature stays flat for a while. That is the idealized picture, and the material constants are rounded averages.',
   formula:'Q = mcΔT  or  Q = mL',
   terms:'Q = heat energy · m = mass · c = specific heat capacity · L = latent heat'
  },
  law:{
   title:'First Law of Thermodynamics',
-  body:'This model demonstrates energy conservation in a thermodynamic system. Heat transferred into a gas and work done by the gas determine its change in internal energy.'+MORE,
-  detail:'Positive heat input increases internal energy. Work done by the gas transfers energy out of the system.',
+  body:'Energy never disappears, it only moves around. Heat flowing into a gas and work done by the gas decide how much its internal energy changes.'+MORE,
+  detail:'Heat in raises the internal energy. Work done by the gas takes energy back out.',
   formula:'ΔU = Q − W',
   terms:'ΔU = change in internal energy · Q = heat added · W = work done by the gas'
  }
@@ -511,64 +439,158 @@ let G3=null,pr=Math.min(window.devicePixelRatio||1,2);
 let curH=2.5,liqTop=0,last=0,th=.7,ph=1.15,ds=9,drag=null;
 const stage=$('stage');
 
+function woodTexture(){                  // procedural planks, no image files needed
+ const c=document.createElement('canvas');c.width=c.height=512;
+ const g=c.getContext('2d');
+ ['#b98a58','#c29461','#b2824f','#bd8e5b'].forEach((col,p)=>{
+  const y0=p*128;
+  g.fillStyle=col;g.fillRect(0,y0,512,128);
+  for(let i=0;i<46;i++){
+   g.strokeStyle=`rgba(${70+Math.random()*40|0},${40+Math.random()*25|0},15,${.05+Math.random()*.12})`;
+   g.lineWidth=.6+Math.random()*1.8;
+   const y=y0+Math.random()*128;
+   g.beginPath();g.moveTo(0,y);
+   g.bezierCurveTo(170,y+(Math.random()-.5)*10,340,y+(Math.random()-.5)*10,512,y+(Math.random()-.5)*4);
+   g.stroke();
+  }
+  g.fillStyle='rgba(60,30,10,.35)';g.fillRect(0,y0,512,2);
+ });
+ const t=new THREE.CanvasTexture(c);
+ t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1.5,1);t.anisotropy=4;
+ return t;
+}
+
 function init3D(){
  if(typeof THREE==='undefined')throw new Error('Three.js did not load');
  const ren=new THREE.WebGLRenderer({antialias:true,alpha:true});
  ren.setPixelRatio(pr);
+ ren.shadowMap.enabled=true;
+ ren.shadowMap.type=THREE.PCFSoftShadowMap;
  ren.domElement.id='gl';
  stage.prepend(ren.domElement);
  ren.domElement.addEventListener('webglcontextlost',e=>e.preventDefault());
 
  const scene=new THREE.Scene();
  const cam=new THREE.PerspectiveCamera(45,1,.1,100);
- scene.add(new THREE.AmbientLight(0xffffff,.65));
- const sun=new THREE.DirectionalLight(0xffffff,.9);
- sun.position.set(5,8,4);
+
+ // warm window light, a soft cool fill, and a glow from the hot plate
+ scene.add(new THREE.HemisphereLight(0xfff1dc,0xb38559,.8));
+ const sun=new THREE.DirectionalLight(0xffe2b5,.95);
+ sun.position.set(4.5,8,3.5);
+ sun.castShadow=true;
+ sun.shadow.mapSize.set(1024,1024);
+ Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6,near:1,far:24});
+ sun.shadow.camera.updateProjectionMatrix();
+ sun.shadow.bias=-.0005;
  scene.add(sun);
- const hl=new THREE.PointLight(0xff6a2a,0,10);
- hl.position.set(0,-.4,0);
+ const fill=new THREE.DirectionalLight(0xb9ceff,.3);
+ fill.position.set(-5,3,-4);
+ scene.add(fill);
+ const hl=new THREE.PointLight(0xff7a35,0,9);
+ hl.position.set(0,.35,0);
  scene.add(hl);
 
- const base=new THREE.Mesh(
-  new THREE.CylinderGeometry(3.2,3.4,.3,48),
-  new THREE.MeshStandardMaterial({color:0x26324f,metalness:.6,roughness:.35})
- );
- base.position.y=-.15;
- scene.add(base);
+ const shade=(o,cast,recv)=>o.traverse(m=>{if(m.isMesh){m.castShadow=cast;m.receiveShadow=recv;}});
 
- const heater=new THREE.Mesh(
-  new THREE.CylinderGeometry(1.9,1.9,.06,48),
-  new THREE.MeshStandardMaterial({color:0x331a10,emissive:0xff6a2a,emissiveIntensity:0})
+ // wooden lab bench (its top surface is at y = -0.16)
+ const bench=new THREE.Mesh(
+  new THREE.BoxGeometry(9.5,.5,6.8),
+  new THREE.MeshStandardMaterial({map:woodTexture(),roughness:.82,metalness:0})
  );
- heater.position.y=.03;
- scene.add(heater);
+ bench.position.y=-.41;
+ shade(bench,false,true);
+ scene.add(bench);
 
+ // cast-iron hot plate with glowing coils
+ const plate=new THREE.Mesh(
+  new THREE.CylinderGeometry(2.35,2.45,.16,56),
+  new THREE.MeshStandardMaterial({color:0x2e2a27,roughness:.55,metalness:.55})
+ );
+ plate.position.y=-.08;
+ shade(plate,true,true);
+ scene.add(plate);
+ const coilMat=new THREE.MeshStandardMaterial({color:0x2a1a12,emissive:0xff7a35,emissiveIntensity:0,roughness:.6});
+ const coils=[.55,1.0,1.45].map(r=>{
+  const t=new THREE.Mesh(new THREE.TorusGeometry(r,.055,10,64),coilMat);
+  t.rotation.x=Math.PI/2;t.position.y=.012;scene.add(t);return t;
+ });
+ const dial=new THREE.Mesh(new THREE.CylinderGeometry(.2,.22,.22,24),new THREE.MeshStandardMaterial({color:0x7a3b22,roughness:.5}));
+ dial.rotation.x=Math.PI/2;dial.position.set(0,-.06,2.58);
+ shade(dial,true,false);
+ scene.add(dial);
+
+ // glass tank with brass corner posts (posts stretch with the tank)
+ const brass=new THREE.MeshStandardMaterial({color:0xc9a24a,metalness:.65,roughness:.38});
  const bg=new THREE.BoxGeometry(3,1,3);
  bg.translate(0,.5,0);
  const box=new THREE.Group();
  box.add(new THREE.Mesh(bg,new THREE.MeshPhysicalMaterial({
-  color:0x9fd0ff,transparent:true,opacity:.13,roughness:.05,side:THREE.DoubleSide,depthWrite:false
+  color:0xcfe6ee,transparent:true,opacity:.16,roughness:.04,side:THREE.DoubleSide,depthWrite:false
  })));
- box.add(new THREE.LineSegments(new THREE.EdgesGeometry(bg),new THREE.LineBasicMaterial({color:0xbfe0ff})));
+ box.add(new THREE.LineSegments(new THREE.EdgesGeometry(bg),new THREE.LineBasicMaterial({color:0xfff6e6,transparent:true,opacity:.8})));
+ const postGeo=new THREE.BoxGeometry(.13,1,.13);
+ postGeo.translate(0,.5,0);
+ [[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5]].forEach(([x,z])=>{
+  const p=new THREE.Mesh(postGeo,brass);p.position.set(x,0,z);p.castShadow=true;box.add(p);
+ });
  scene.add(box);
+ [[0,-1.5,3.26,.13],[0,1.5,3.26,.13]].forEach(([x,z,w,d])=>{
+  const b=new THREE.Mesh(new THREE.BoxGeometry(w,.1,d),brass);b.position.set(x,.05,z);b.castShadow=true;scene.add(b);
+ });
+ [[-1.5,0],[1.5,0]].forEach(([x,z])=>{
+  const b=new THREE.Mesh(new THREE.BoxGeometry(.13,.1,3),brass);b.position.set(x,.05,z);b.castShadow=true;scene.add(b);
+ });
 
- const liq=new THREE.Mesh(bg,new THREE.MeshStandardMaterial({
-  color:0x2f8cff,transparent:true,opacity:.32,depthWrite:false
- }));
+ const liq=new THREE.Mesh(bg,new THREE.MeshStandardMaterial({color:0x2f8cff,transparent:true,opacity:.32,depthWrite:false}));
  liq.scale.set(.98,1,.98);
  scene.add(liq);
 
+ // brass piston with a wooden knob
  const piston=new THREE.Group();
- const steel=new THREE.MeshStandardMaterial({color:0xc4ccd8,metalness:.85,roughness:.25});
- piston.add(new THREE.Mesh(new THREE.BoxGeometry(3.08,.18,3.08),steel));
- const rod=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,3,16),steel);
+ piston.add(new THREE.Mesh(new THREE.BoxGeometry(3.08,.18,3.08),brass));
+ const rod=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,3,16),brass);
  rod.position.y=1.6;
  piston.add(rod);
+ const knob=new THREE.Mesh(new THREE.SphereGeometry(.3,24,16),new THREE.MeshStandardMaterial({color:0x8a5a33,roughness:.55}));
+ knob.position.y=3.2;
+ piston.add(knob);
+ shade(piston,true,false);
  scene.add(piston);
+
+ // little human touches on the bench: a mug, a notebook and a pencil
+ const ceramic=new THREE.MeshStandardMaterial({color:0xf2e6d4,roughness:.5});
+ const mug=new THREE.Group();
+ mug.add(new THREE.Mesh(new THREE.CylinderGeometry(.4,.36,.58,28),ceramic));
+ const handle=new THREE.Mesh(new THREE.TorusGeometry(.2,.05,10,20,Math.PI*1.3),ceramic);
+ handle.position.set(.42,0,0);handle.rotation.z=-Math.PI*.65;
+ mug.add(handle);
+ const coffee=new THREE.Mesh(new THREE.CylinderGeometry(.33,.33,.02,28),new THREE.MeshStandardMaterial({color:0x4a2c1a,roughness:.3}));
+ coffee.position.y=.27;
+ mug.add(coffee);
+ mug.position.set(3.5,.13,-1.9);
+ shade(mug,true,true);
+ scene.add(mug);
+
+ const book=new THREE.Group();
+ const cover=new THREE.Mesh(new THREE.BoxGeometry(1.5,.07,2),new THREE.MeshStandardMaterial({color:0x5d8a64,roughness:.7}));
+ const pages=new THREE.Mesh(new THREE.BoxGeometry(1.38,.06,1.9),new THREE.MeshStandardMaterial({color:0xfaf3e3,roughness:.9}));
+ pages.position.y=.06;
+ book.add(cover,pages);
+ const pencil=new THREE.Group();
+ const body=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,1.2,10),new THREE.MeshStandardMaterial({color:0xe0a526,roughness:.5}));
+ const tip=new THREE.Mesh(new THREE.ConeGeometry(.045,.16,10),new THREE.MeshStandardMaterial({color:0xd8b48a,roughness:.7}));
+ tip.position.y=-.68;
+ pencil.add(body,tip);
+ pencil.rotation.z=Math.PI/2;pencil.rotation.y=.5;pencil.position.set(.1,.16,.2);
+ book.add(pencil);
+ book.position.set(-3.3,-.16+.035,1.6);
+ book.rotation.y=.4;
+ shade(book,true,true);
+ scene.add(book);
 
  const mesh=new THREE.InstancedMesh(
   new THREE.SphereGeometry(.075,14,14),
-  new THREE.MeshStandardMaterial({roughness:.25,metalness:.15}),
+  new THREE.MeshStandardMaterial({roughness:.5,metalness:.02}),
   N
  );
  mesh.frustumCulled=false;               // fixes particles vanishing at some camera angles
@@ -577,7 +599,7 @@ function init3D(){
  for(let i=0;i<N;i++){mesh.setColorAt(i,tmp);mesh.instanceMatrix.array[i*16+15]=1;}
  scene.add(mesh);
 
- return{ren,scene,cam,box,piston,liq,heater,hl,mesh,
+ return{ren,scene,cam,box,piston,liq,heater:coils[0],hl,mesh,
   M:mesh.instanceMatrix.array,C:mesh.instanceColor.array,
   pal:[0xcfeaff,0x3b8dff,0xff9a62].map(h=>new THREE.Color(h)),tmp,gb:-1,gc:[0,0,0]};
 }
@@ -689,7 +711,7 @@ function moveParticles(dt,dtv){
  let bucket=0;
  if(!st){
   bucket=Math.round(clamp((Tk-100)/900,0,1)*31);
-  if(bucket!==g.gb){g.gb=bucket;g.tmp.setHSL(.62-.62*bucket/31,.9,.55);g.gc=[g.tmp.r,g.tmp.g,g.tmp.b];}
+  if(bucket!==g.gb){g.gb=bucket;g.tmp.setHSL(.58-.55*bucket/31,.62,.56);g.gc=[g.tmp.r,g.tmp.g,g.tmp.b];}
  }
 
  for(let i=0;i<N;i++){
@@ -733,29 +755,29 @@ function moveParticles(dt,dtv){
  g.liq.scale.y=Math.max(.01,liqTop);
 
  const hot=D.glow>=0,gl=clamp(Math.abs(D.glow),0,1);
- g.heater.material.emissive.set(hot?0xff6a2a:0x3b8dff);
+ g.heater.material.emissive.set(hot?0xff7a35:0x6fb2ff);
  g.heater.material.emissiveIntensity=gl*1.8;
- g.hl.color.set(hot?0xff6a2a:0x3b8dff);
+ g.hl.color.set(hot?0xff7a35:0x6fb2ff);
  g.hl.intensity=gl*2.2;
 }
 
 // ---------- TIMELINE DATA ----------
 const SERIES={
  gas:[
-  {n:'T',u:'K',c:'#ff7a45',g:0,d:0,f:()=>S.T},
-  {n:'P',u:'kPa',c:'#4aa3df',g:1,d:1,f:()=>S.n*R*S.T/(S.V/1000)/1000},
-  {n:'V',u:'L',c:'#3fae6a',g:2,d:1,f:()=>S.V}
+  {n:'T',u:'K',c:'#c4552d',g:0,d:0,f:()=>S.T},
+  {n:'P',u:'kPa',c:'#3f6c9a',g:1,d:1,f:()=>S.n*R*S.T/(S.V/1000)/1000},
+  {n:'V',u:'L',c:'#5d8a64',g:2,d:1,f:()=>S.V}
  ],
  heat:[
-  {n:'T',u:'°C',c:'#ff7a45',g:0,d:1,f:()=>D.st.T},
-  {n:'Q',u:'kJ',c:'#4aa3df',g:1,d:0,f:()=>S.Q},
-  {n:'Stage',u:'',c:'#3fae6a',g:2,d:1,f:()=>D.st.i+D.st.f}
+  {n:'T',u:'°C',c:'#c4552d',g:0,d:1,f:()=>D.st.T},
+  {n:'Q',u:'kJ',c:'#3f6c9a',g:1,d:0,f:()=>S.Q},
+  {n:'Stage',u:'',c:'#8a5a83',g:2,d:1,f:()=>D.st.i+D.st.f}
  ],
  law:[
-  {n:'Q',u:'kJ',c:'#e05a5a',g:0,d:1,f:()=>S.fq},
-  {n:'W',u:'kJ',c:'#4aa3df',g:0,d:1,f:()=>S.fw},
-  {n:'ΔU',u:'kJ',c:'#3fae6a',g:0,d:1,f:()=>S.fq-S.fw},
-  {n:'T',u:'K',c:'#ffb347',g:1,d:0,f:()=>D.Tk}
+  {n:'Q',u:'kJ',c:'#c4552d',g:0,d:1,f:()=>S.fq},
+  {n:'W',u:'kJ',c:'#3f6c9a',g:0,d:1,f:()=>S.fw},
+  {n:'ΔU',u:'kJ',c:'#5d8a64',g:0,d:1,f:()=>S.fq-S.fw},
+  {n:'T',u:'K',c:'#c98a12',g:1,d:0,f:()=>D.Tk}
  ]
 };
 const MAXS=480;
@@ -836,7 +858,7 @@ v_rms     ${Math.sqrt(3*R*S.T/G.M).toFixed(0)} m/s
 Molecules ${(S.n*NA).toExponential(2)}`;
  }
  else if(mode==='heat'){
-  const st=D.st,ph=['Solid','Solid + liquid','Liquid','Liquid + gas','Gas'][st.i];
+  const st=D.st,ph=['Solid','Part solid, part liquid','Liquid','Part liquid, part gas','Gas'][st.i];
   t=
 `${ph}
 Temp  ${st.T.toFixed(1)} °C
@@ -851,15 +873,15 @@ Heat  ${S.Q.toFixed(0)} / ${st.E[5].toFixed(0)} kJ`+
   g.strokeStyle=C.mut;g.lineWidth=2;
   g.beginPath();g.moveTo(30,10);g.lineTo(30,H-25);g.lineTo(W-10,H-25);g.stroke();
 
-  ['#4aa3df','#2ea84f','#1e6fd9','#2ea84f','#e05a5a'].forEach((c,i)=>{
+  ['#6f9cc4','#5d8a64','#3f6c9a','#5d8a64','#c4552d'].forEach((c,i)=>{
    g.strokeStyle=c;g.lineWidth=5;
    g.beginPath();g.moveTo(X(E[i]),Y(Tt[i]));g.lineTo(X(E[i+1]),Y(Tt[i+1]));g.stroke();
   });
 
   const tg=state(clamp(v.q,0,E[5]));            // hollow ring = target
-  g.strokeStyle='#ff3b30';g.lineWidth=3;
+  g.strokeStyle='#b8453f';g.lineWidth=3;
   g.beginPath();g.arc(X(Math.min(v.q,E[5])),Y(tg.T),11,0,7);g.stroke();
-  g.fillStyle='#ff3b30';
+  g.fillStyle='#b8453f';
   g.beginPath();g.arc(X(Math.min(S.Q,E[5])),Y(st.T),9,0,7);g.fill();
  }
  else{
@@ -869,11 +891,11 @@ Heat  ${S.Q.toFixed(0)} / ${st.E[5].toFixed(0)} kJ`+
 Gas ${du>0?'warms up':du<0?'cools down':'steady'}
 ΔT = ${dT.toFixed(1)} K`;
 
-  [[S.fq,'#e05a5a','Q'],[S.fw,'#4aa3df','W'],[du,'#3fae6a','ΔU']].forEach(([x,c,l],i)=>{
+  [[S.fq,'#c4552d','Q'],[S.fw,'#3f6c9a','W'],[du,'#5d8a64','ΔU']].forEach(([x,c,l],i)=>{
    const h=x/110*(H/2-30),bx=40+i*140;
    g.fillStyle=c;
    g.fillRect(bx,h>=0?H/2-h:H/2,90,Math.abs(h));
-   g.fillStyle=C.fg;g.font='20px system-ui';
+   g.fillStyle=C.fg;g.font='20px Avenir Next,Segoe UI,system-ui,sans-serif';
    g.fillText(l,bx+35,H-8);
   });
   g.fillStyle=C.mut;
@@ -896,7 +918,7 @@ function tick(dt){                       // dt = real seconds (0 = refresh witho
   lastHud=now;
   hud();
   updateLegend();
-  $('clock').textContent=`t = ${simT.toFixed(1)} s · ×${TS}${paused?' · paused':''}`;
+  $('clock').textContent=`${simT.toFixed(1)} s · ×${TS}${paused?' · paused':''}`;
  }
  if(tlDirty&&!$('tl').classList.contains('min'))drawTL();
 }
@@ -905,6 +927,7 @@ function tick(dt){                       // dt = real seconds (0 = refresh witho
 function updateExplanation(k){
  const e=EXPLANATIONS[k];
  $('explain').innerHTML=`
+  <span class="kicker">What is going on here?</span>
   <h3>${e.title}</h3>
   <p>${e.body}</p>
   <p>${e.detail}</p>
@@ -947,7 +970,7 @@ function setModel(k){
  if(window.ThermoLabExtras)window.ThermoLabExtras.recordMode(k);
  const M=MODELS[k];
 
- document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',c.dataset.k===k));
+ document.querySelectorAll('.exp').forEach(c=>c.classList.toggle('on',c.dataset.k===k));
 
  $('eq').textContent=M.eq;
  $('opt').innerHTML=M.opts.map(o=>`<option>${o}</option>`).join('');
@@ -991,7 +1014,7 @@ function setModel(k){
 
 // Create model buttons.
 $('cards').innerHTML=Object.entries(MODELS).map(([k,m])=>`
- <button class="card" data-k="${k}">
+ <button class="exp" data-k="${k}">
   <span class="i">${m.ic}</span>
   <span><b>${m.name}</b><small>${m.eq}</small></span>
  </button>
@@ -1002,7 +1025,7 @@ const requestedMode=new URLSearchParams(location.search).get('mode');
 const initialMode=MODELS[requestedMode]?requestedMode:'gas';
 
 // Update the URL when the user manually changes models.
-document.querySelectorAll('.card').forEach(c=>{
+document.querySelectorAll('.exp').forEach(c=>{
  c.onclick=()=>{
   setModel(c.dataset.k);
   const url=new URL(location.href);
