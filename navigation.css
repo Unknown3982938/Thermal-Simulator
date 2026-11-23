@@ -55,6 +55,21 @@
     transition: transform .28s ease;
     color: #e9f0ff;
     font-family: system-ui, sans-serif;
+
+    /* The drawer is a <nav>, and several pages style every <nav> as a flex row
+       (display:flex; justify-content:space-between). That scattered the drawer's
+       contents sideways, so reset the layout here. */
+    display: block;
+    box-sizing: border-box;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 0;
+    margin: 0;
+    min-height: 0;
+    max-width: none;
+    border-top: 0;
+    border-bottom: 0;
 }
 
 #site-nav.open {
