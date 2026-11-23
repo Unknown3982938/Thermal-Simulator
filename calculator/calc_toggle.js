@@ -1,5 +1,5 @@
 /* Thermo Lab 3D - scientific calculator toggle (lab / simulation page only).
-   The maths runs in Python: calc_engine.py is loaded into Pyodide on first use. */
+   The maths runs in Python: calc_engine.py is loaded into Pyodide (in a Web Worker) on first use. */
 (() => {
   'use strict';
   const page = location.pathname.split('/').pop() || 'index.html';
@@ -35,35 +35,76 @@
 
   const $ = s => panel.querySelector(s);
   const inp = $('#calc-in'), out = $('#calc-out'), hist = $('#calc-hist'), status = $('#calc-status');
-  let mode = 'deg', py = null, loading = null;
+  let mode = 'deg', worker = null, ready = false, loading = null, nextId = 1;
+  const pending = new Map();
 
   function setOut(text, isErr) { out.textContent = text; out.classList.toggle('err', !!isErr); }
   const notify = msg => window.ThermoLabExtras && window.ThermoLabExtras.toast(msg);
 
+  /* Pyodide runs inside a Web Worker. Starting it on the main thread froze the whole
+     page (animation, sliders, scrolling) for several seconds while WebAssembly compiled. */
+  const WORKER_SRC = `
+let evalFn = null;
+self.onmessage = async (e) => {
+  const m = e.data;
+  if (m.type === 'init') {
+    try {
+      importScripts(m.pyodide + 'pyodide.js');
+      const p = await loadPyodide({ indexURL: m.pyodide });
+      p.runPython(await (await fetch(m.engine)).text());
+      evalFn = p.globals.get('web_eval');
+      self.postMessage({ type: 'ready' });
+    } catch (err) { self.postMessage({ type: 'error', message: String((err && err.message) || err) }); }
+  } else if (m.type === 'eval') {
+    let data;
+    try { data = evalFn(m.expr, m.mode); }
+    catch (err) { data = JSON.stringify({ ok: false, text: 'Python error' }); }
+    self.postMessage({ type: 'result', id: m.id, data: data });
+  }
+};`;
+
   function loadPython() {                                   // runs once, on first open
     if (loading) return loading;
+    const t0 = Date.now();
     status.textContent = 'Python: loading…';
+    const tick = setInterval(() => { status.textContent = 'Python: loading… ' + Math.round((Date.now() - t0) / 1000) + ' s'; }, 1000);
     loading = new Promise((ok, fail) => {
-      const s = document.createElement('script');
-      s.src = PYODIDE + 'pyodide.js'; s.onload = ok; s.onerror = () => fail(new Error('Pyodide script blocked or offline'));
-      document.head.appendChild(s);
-    }).then(() => loadPyodide({ indexURL: PYODIDE }))
-      .then(async p => {
-        const src = await (await fetch(base + 'calc_engine.py')).text();
-        p.runPython(src); py = p.globals.get('web_eval');
-        status.textContent = 'Python: ready ✓';
-      }).catch(err => {
-        loading = null; status.textContent = 'Python: unavailable';
-        setOut('Could not load Python. Check your internet connection and open the site over http(s).', true);
-        notify('Calculator could not load Python'); console.error(err);
-      });
+      try { worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' }))); }
+      catch (err) { fail(err); return; }
+      worker.onmessage = e => {
+        const m = e.data;
+        if (m.type === 'ready') ok();
+        else if (m.type === 'error') fail(new Error(m.message));
+        else if (m.type === 'result' && pending.has(m.id)) { pending.get(m.id)(m.data); pending.delete(m.id); }
+      };
+      worker.onerror = err => fail(new Error(err.message || 'Worker failed'));
+      worker.postMessage({ type: 'init', pyodide: PYODIDE, engine: base + 'calc_engine.py' });
+    }).then(() => {
+      clearInterval(tick); ready = true; status.textContent = 'Python: ready ✓';
+    }).catch(err => {
+      clearInterval(tick); loading = null; ready = false;
+      if (worker) { worker.terminate(); worker = null; }
+      status.textContent = 'Python: unavailable';
+      setOut('Could not load Python. Check your internet connection and open the site over http(s).', true);
+      notify('Calculator could not load Python'); console.error(err);
+    });
     return loading;
+  }
+
+  function runPython(expr) {
+    return new Promise((resolve, reject) => {
+      const id = nextId++;
+      const timer = setTimeout(() => { pending.delete(id); reject(new Error('timeout')); }, 15000);
+      pending.set(id, data => { clearTimeout(timer); resolve(JSON.parse(data)); });
+      worker.postMessage({ type: 'eval', id: id, expr: expr, mode: mode });
+    });
   }
 
   async function evaluate() {
     const expr = inp.value.trim(); if (!expr) return;
-    await loadPython(); if (!py) return;
-    const r = JSON.parse(py(expr, mode));
+    if (!ready) { setOut('Waiting for Python to finish loading…'); await loadPython(); if (!ready) return; }
+    let r;
+    try { r = await runPython(expr); } catch (err) { setOut('Python did not answer. Please try again.', true); return; }
     setOut(r.text, !r.ok);
     if (r.ok) {
       const row = document.createElement('div'); row.textContent = `${expr} = ${r.text}`;
