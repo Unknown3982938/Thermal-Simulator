@@ -54,7 +54,7 @@
   }
   recordVisit();
   // Type THERMO anywhere on the page (not while entering form data) to reveal the secret.
-  let typed='thermo';
+  let typed='';
   document.addEventListener('keydown',e=>{
     if(e.ctrlKey||e.altKey||e.metaKey||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.target.isContentEditable)return;
     typed=(typed+e.key.toLowerCase()).slice(-6);
