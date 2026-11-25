@@ -173,6 +173,15 @@ html body .calc-grid button{border-radius:6px}
  #site-nav-toggle{right:14px;bottom:14px}
  #site-nav{right:14px;bottom:78px}
 }
+
+/* 2D / 3D view switch */
+#viewTog{margin-bottom:9px}
+#cv2d{position:absolute;inset:0;width:100%;height:100%;display:none}
+body.v2d #cv2d{display:block}
+body.v2d #gl{display:none}
+body.v2d #stage{cursor:default}
+.tog button:disabled{opacity:.4;cursor:not-allowed}
+.tog button:disabled:hover{border-color:var(--bd)}
 </style>
 <link rel="stylesheet" href="extras.css">
 </head>
@@ -215,16 +224,21 @@ html body .calc-grid button{border-radius:6px}
  <div id="explain"></div>
 
  <div class="sec">Look around</div>
+ <div class="tog" id="viewTog" role="group" aria-label="View">
+  <button id="bView3" class="on" aria-pressed="true">3D view</button>
+  <button id="bView2" aria-pressed="false">2D view</button>
+ </div>
  <div class="tog">
   <button id="bAuto" class="on">Spin</button>
   <button id="bPause">Pause</button>
   <button id="bReset">Start over</button>
  </div>
  <div class="tog"><button id="bIR" class="wide">Heat vision</button></div>
- <p class="hintline">Drag to turn the bench around. Scroll or pinch to zoom.</p>
+ <p class="hintline" id="viewHint">Drag to turn the bench around. Scroll or pinch to zoom.</p>
 </aside>
 
 <div id="stage">
+ <canvas id="cv2d" role="img" aria-label="2D side view of the experiment"></canvas>
  <div id="gauge" aria-hidden="true">
   <div id="gmax"></div>
   <div class="gwrap"><div class="gtube"><div id="mercury"></div></div><div id="gmarks"></div><div id="gval"></div></div>
@@ -473,7 +487,8 @@ function rampAt(t){
 }
 const RAMP=Array.from({length:32},(_,i)=>rampAt(i/31));
 const SCR={mut:'#556273',fg:'#aab8c6',bd:'rgba(255,255,255,.08)'};   // the dark instrument screens
-let IR=false,heatN=.3,rippleT=0;
+let IR=false,heatN=.3,rippleT=0,view='3d';
+const pcls=new Uint8Array(N);          // per-particle state (0 solid, 1 liquid, 2 gas) shared by both views
 
 // ---------- 3D SCENE (guarded: if WebGL/Three.js fails, the rest still works) ----------
 let G3=null,pr=Math.min(window.devicePixelRatio||1,2);
@@ -584,7 +599,6 @@ function init3D(){
 try{G3=init3D();}
 catch(err){
  console.error(err);
- stage.insertAdjacentHTML('beforeend','<div id="no3d">3D view unavailable (Three.js or WebGL could not load).<br>Controls, time frame and graphs still work.</div>');
 }
 
 function resize(){
@@ -684,11 +698,11 @@ function moveParticles(dt,dtv){
  const sp=1.8*Math.sqrt(Tk/300)*Math.pow(.028/Gp.M,.35);
  const r=.075,lim=1.5-r,hi=curH-r,top1=Math.max(.3,liqTop);
  const jit=.03*Tk/250,lf=clamp(8*dtv,0,1);
- const M=g.M,C=g.C;
+ const r3=!!g&&view==='3d',M=r3?g.M:null,C=r3?g.C:null;
  let bucket=0;
  if(!st){
   bucket=Math.round(clamp((Tk-100)/900,0,1)*31);
-  if(bucket!==g.gb){g.gb=bucket;g.tmp.setHSL(.58-.55*bucket/31,.62,.56);g.gc=[g.tmp.r,g.tmp.g,g.tmp.b];}
+  if(r3&&bucket!==g.gb){g.gb=bucket;g.tmp.setHSL(.58-.55*bucket/31,.62,.56);g.gc=[g.tmp.r,g.tmp.g,g.tmp.b];}
  }
  const irB=Math.round(heatN*31),irC=RAMP[irB];
 
@@ -714,6 +728,8 @@ function moveParticles(dt,dtv){
    }
   }
 
+  pcls[i]=s;
+  if(!r3)continue;
   const o=i*16,sc=i<n?Gp.s:0;
   M[o]=sc;M[o+5]=sc;M[o+10]=sc;M[o+12]=px[i];M[o+13]=py[i];M[o+14]=pz[i];
 
@@ -726,6 +742,9 @@ function moveParticles(dt,dtv){
    g.mesh.instanceColor.needsUpdate=true;
   }
  }
+ const hot=D.glow>=0,gl=clamp(Math.abs(D.glow),0,1);
+ rippleT+=dtv*(.18+gl*.5);                // ripples run in both views
+ if(!r3)return;
  g.mesh.instanceMatrix.needsUpdate=true;
 
  g.box.scale.y=curH;
@@ -733,7 +752,6 @@ function moveParticles(dt,dtv){
  g.liq.visible=mode==='heat'&&liqTop>.05;
  g.liq.scale.y=Math.max(.01,liqTop);
 
- const hot=D.glow>=0,gl=clamp(Math.abs(D.glow),0,1);
  g.heater.material.emissive.set(hot?0xff7a35:0x6fb2ff);
  g.heater.material.emissiveIntensity=gl*1.8;
  g.hl.color.set(hot?0xff7a35:0x6fb2ff);
@@ -741,7 +759,6 @@ function moveParticles(dt,dtv){
 
  // heat bloom + ripples follow the temperature colour
  const hc=RAMP[Math.round(heatN*31)];
- rippleT+=dtv*(.18+gl*.5);
  g.bloom.material.color.setRGB(hc[0],hc[1],hc[2]);
  g.bloom.material.opacity=.1+gl*.5;
  g.rings.forEach((r,k)=>{
@@ -926,7 +943,7 @@ function tick(dt){                       // dt = real seconds (0 = refresh witho
  dynamics(dSim);
  derive();
  sample();
- if(G3)moveParticles(dt,dtv);
+ moveParticles(dt,dtv);
  const now=performance.now();
  if(!dt||now-lastHud>90){
   lastHud=now;
@@ -1150,6 +1167,7 @@ let pinch=0;
 const pdist=()=>{const [a,b]=[...ptrs.values()];return Math.hypot(a[0]-b[0],a[1]-b[1]);};
 
 stage.onpointerdown=e=>{
+ if(view==='2d')return;
  ptrs.set(e.pointerId,[e.clientX,e.clientY]);
  stage.setPointerCapture(e.pointerId);
  if(ptrs.size===2){drag=null;pinch=pdist();}
@@ -1180,9 +1198,114 @@ stage.onpointerup=endPtr;
 stage.onpointercancel=endPtr;
 
 stage.onwheel=e=>{
+ if(view==='2d')return;
  e.preventDefault();
  ds=clamp(ds+e.deltaY*.01,5,16);
 };
+
+// ---------- 2D VIEW: a side cross-section of the same simulation ----------
+function hsl2rgb(h,sat,l){
+ const a=sat*Math.min(l,1-l),f=n=>{const k=(n+h*12)%12;return l-a*Math.max(-1,Math.min(k-3,9-k,1));};
+ return[Math.round(f(0)*255),Math.round(f(8)*255),Math.round(f(4)*255)];
+}
+const GASCOL=Array.from({length:32},(_,b)=>hsl2rgb(.58-.55*b/31,.62,.56));
+const hex2rgb=h=>[h>>16&255,h>>8&255,h&255];
+
+function render2D(){
+ const cv=$('cv2d'),dpr=Math.min(window.devicePixelRatio||1,2),W=cv.clientWidth,H=cv.clientHeight;
+ if(!W||!H)return;
+ if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+ const g=cv.getContext('2d');
+ g.setTransform(dpr,0,0,dpr,0,0);
+ g.clearRect(0,0,W,H);
+
+ const C=colors(),tlEl2=$('tl'),narrow=W<520,cx=narrow?62+(W-62-186)/2:W/2;      // on phones, centre the scene between the thermometer and the readout card
+ const base=Math.max(190,Math.min(H-62,tlEl2.offsetTop-52));      // keep the scene clear of the timeline panel
+ const sc=Math.min(narrow?(W-62-186)/3.4:W*.6/3,(base-26)/4.4);
+ const X=x=>cx+x*sc,Y=y=>base-y*sc;
+ const irB=Math.round(heatN*31),irC=RAMP[irB].map(v=>Math.round(v*255));
+ const hcs=irC.join(','),glow=clamp(Math.abs(D.glow),0,1),hotC=D.glow>=0?'255,122,53':'111,178,255';
+
+ // ground glow and ripples
+ g.save();g.translate(cx,Y(-.22));g.scale(1,.2);
+ const rg=g.createRadialGradient(0,0,0,0,0,sc*4.2);
+ rg.addColorStop(0,`rgba(${hcs},${.1+glow*.5})`);rg.addColorStop(1,`rgba(${hcs},0)`);
+ g.fillStyle=rg;g.beginPath();g.arc(0,0,sc*4.2,0,6.283);g.fill();g.restore();
+ g.lineWidth=2;
+ for(let k=0;k<4;k++){
+  const p=(rippleT+k*.25)%1,a=(1-p)*(1-p)*.7*clamp(glow*1.5,0,1),rx=sc*(2.7+p*5.6)*.55;
+  if(a<.01)continue;
+  g.strokeStyle=`rgba(${hcs},${a})`;g.beginPath();g.ellipse(cx,Y(-.22),rx,rx*.2,0,0,6.283);g.stroke();
+ }
+
+ // plinth and glowing coils
+ g.fillStyle='#1b222c';g.fillRect(X(-2.55),Y(0),5.1*sc,.22*sc);
+ g.fillStyle='#2a3340';g.fillRect(X(-2.3),Y(0),4.6*sc,Math.max(2,.04*sc));
+ g.save();g.shadowColor=`rgb(${hotC})`;g.shadowBlur=glow*22;g.fillStyle=`rgba(${hotC},${.25+glow*.75})`;
+ [.55,1,1.45].forEach(r=>[-r,r].forEach(x=>{g.beginPath();g.arc(X(x),Y(.03),Math.max(2.5,.05*sc),0,6.283);g.fill();}));
+ g.fillRect(X(-2.55),Y(0)+.1*sc,5.1*sc,Math.max(2,.035*sc));
+ g.restore();
+
+ // glass tank
+ const tw=3*sc,tH=curH*sc;
+ g.globalAlpha=.07;g.fillStyle=C.fg;g.fillRect(X(-1.5),Y(curH),tw,tH);g.globalAlpha=1;
+
+ // liquid
+ if(mode==='heat'&&liqTop>.05){
+  const lc=IR?irC:hex2rgb((SUB[opt]||SUB.Water).liq);
+  g.fillStyle=`rgba(${lc.join(',')},.42)`;g.fillRect(X(-1.47),Y(liqTop),2.94*sc,liqTop*sc);
+  g.strokeStyle='rgba(255,255,255,.6)';g.lineWidth=1.5;g.beginPath();g.moveTo(X(-1.47),Y(liqTop));g.lineTo(X(1.47),Y(liqTop));g.stroke();
+ }
+
+ // particles (depth shown by size)
+ const Gp=GAS[opt]||GAS.Nitrogen,pal=mode==='heat'&&!IR?(SUB[opt]||SUB.Water).pal.map(hex2rgb):null;
+ const gcol=GASCOL[Math.round(clamp((D.Tk-100)/900,0,1)*31)];
+ let last=null;
+ for(let i=0;i<D.n;i++){
+  const c=IR?irC:pal?pal[pcls[i]]:gcol,key=c[0]+','+c[1]+','+c[2];
+  if(key!==last){g.fillStyle=`rgb(${key})`;last=key;}
+  g.beginPath();g.arc(X(px[i]),Y(py[i]),Math.max(2,Math.min(8,.045*sc))*Gp.s*(1+pz[i]/6),0,6.283);g.fill();
+ }
+
+ // frame, posts and rail
+ g.strokeStyle=C.fg;g.globalAlpha=.75;g.lineWidth=2;g.strokeRect(X(-1.5),Y(curH),tw,tH);g.globalAlpha=1;
+ g.fillStyle='#2c3440';const pw=Math.max(4,.13*sc);
+ g.fillRect(X(-1.5)-pw/2,Y(curH),pw,tH);g.fillRect(X(1.5)-pw/2,Y(curH),pw,tH);
+ g.fillRect(X(-1.63),Y(.1),3.26*sc,.1*sc);
+
+ // piston, rod and cap
+ const top=Y(curH+.18),pg=g.createLinearGradient(0,top,0,top+.18*sc);
+ pg.addColorStop(0,'#4a5565');pg.addColorStop(1,'#2c3440');
+ g.fillStyle=pg;g.fillRect(X(-1.54),top,3.08*sc,.18*sc);
+ g.fillStyle='#b8c4d0';g.fillRect(cx-.09*sc,0,.18*sc,top);
+ g.fillStyle='#2c3440';g.fillRect(cx-.3*sc,Math.max(2,top-3*sc),.6*sc,.32*sc);
+
+ // temperature label under the plinth
+ g.fillStyle=C.mut;g.font='600 11px ui-monospace,Consolas,monospace';g.textAlign='center';
+ g.fillText((mode==='heat'?D.st.T.toFixed(0)+' °C':(mode==='gas'?S.T:D.Tk).toFixed(0)+' K')+'  ·  2D side view',cx,Y(-.22)+16);
+}
+
+function setView(v,save){
+ if(v==='3d'&&!G3)v='2d';
+ view=v;
+ const is3=v==='3d';
+ document.body.classList.toggle('v2d',!is3);
+ $('bView3').classList.toggle('on',is3);$('bView3').setAttribute('aria-pressed',String(is3));
+ $('bView2').classList.toggle('on',!is3);$('bView2').setAttribute('aria-pressed',String(!is3));
+ $('bAuto').disabled=!is3;
+ $('viewHint').textContent=is3?'Drag to turn the bench around. Scroll or pinch to zoom.'
+  :G3?'2D side view: a cross-section of the same experiment, with the same controls and graphs.'
+  :'3D is not available here (Three.js or WebGL could not load), so you are seeing the 2D view.';
+ ck.fill(-1);dirty=true;
+ if(is3)resize();
+ if(save){
+  try{localStorage.setItem('thermolab.view',v);}catch(e){}
+  const url=new URL(location.href);url.searchParams.set('view',v);history.replaceState({},'',url);
+ }
+}
+$('bView3').onclick=()=>setView('3d',true);
+$('bView2').onclick=()=>setView('2d',true);
+if(!G3){$('bView3').disabled=true;$('bView3').title='3D is not available on this device';}
 
 function frame(t){
  const raw=(t-last)/1000||0;
@@ -1196,7 +1319,8 @@ function frame(t){
 
  if(auto&&!drag)th+=.12*dt;
 
- if(G3){
+ if(view==='2d')render2D();
+ else if(G3){
   const k=G3.cam.aspect<1?1/Math.sqrt(G3.cam.aspect):1,d=ds*k;
   G3.cam.position.set(
    d*Math.sin(ph)*Math.sin(th),
@@ -1211,6 +1335,9 @@ function frame(t){
 
 // Start with the requested model.
 setModel(initialMode);
+let startView=new URLSearchParams(location.search).get('view');
+if(startView!=='2d'&&startView!=='3d'){try{startView=localStorage.getItem('thermolab.view');}catch(e){startView=null;}}
+setView(startView==='2d'?'2d':'3d',false);
 sizeTL();
 requestAnimationFrame(frame);
 </script>
