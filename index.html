@@ -178,7 +178,7 @@ html body .calc-grid button{border-radius:6px}
 #viewTog{margin-bottom:9px}
 #cv2d{position:absolute;inset:0;width:100%;height:100%;display:none}
 body.v2d #cv2d{display:block}
-body.v2d #gl{display:none}
+body.v2d #gl{display:none!important}
 body.v2d #stage{cursor:default}
 .tog button:disabled{opacity:.4;cursor:not-allowed}
 .tog button:disabled:hover{border-color:var(--bd)}
@@ -1219,9 +1219,9 @@ function render2D(){
  g.setTransform(dpr,0,0,dpr,0,0);
  g.clearRect(0,0,W,H);
 
- const C=colors(),tlEl2=$('tl'),narrow=W<520,cx=narrow?62+(W-62-186)/2:W/2;      // on phones, centre the scene between the thermometer and the readout card
+ const C=colors(),tlEl2=$('tl'),narrow=W<520,cx=W/2;      // centre the 2D scene in the full stage viewport
  const base=Math.max(190,Math.min(H-62,tlEl2.offsetTop-52));      // keep the scene clear of the timeline panel
- const sc=Math.min(narrow?(W-62-186)/3.4:W*.6/3,(base-26)/4.4);
+ const sc=Math.min(narrow?W*.62/6:W*.6/3,(base-26)/4.4);
  const X=x=>cx+x*sc,Y=y=>base-y*sc;
  const irB=Math.round(heatN*31),irC=RAMP[irB].map(v=>Math.round(v*255));
  const hcs=irC.join(','),glow=clamp(Math.abs(D.glow),0,1),hotC=D.glow>=0?'255,122,53':'111,178,255';
@@ -1290,6 +1290,9 @@ function setView(v,save){
  view=v;
  const is3=v==='3d';
  document.body.classList.toggle('v2d',!is3);
+ // Explicitly switch canvases so the inactive renderer cannot remain layered underneath.
+ if(G3)G3.ren.domElement.style.display=is3?'block':'none';
+ $('cv2d').style.display=is3?'none':'block';
  $('bView3').classList.toggle('on',is3);$('bView3').setAttribute('aria-pressed',String(is3));
  $('bView2').classList.toggle('on',!is3);$('bView2').setAttribute('aria-pressed',String(!is3));
  $('bAuto').disabled=!is3;
