@@ -45,3 +45,8 @@ Published simulation URL:  https://unknown3982938.github.io/Thermal-Simulator/
 ## License
 
 MIT License
+
+
+## Gas laws and thermodynamic processes
+
+The Gas Laws & Processes experiment includes interactive demonstrations of Boyle's, Charles's, Gay-Lussac's, Avogadro's, and the Combined Gas Law, plus isothermal, isobaric, isochoric, and adiabatic processes. The demonstrations use an ideal-gas model and dynamically change the available sliders for the selected relationship.

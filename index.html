@@ -199,6 +199,7 @@ body.v2d #stage{cursor:default}
  <div id="cards"></div>
 
  <div class="sec"><span>Set it up</span><span id="eq"></span></div>
+ <div id="gasConceptRow" style="display:none;margin-bottom:10px"><select id="gasConcept" aria-label="Gas law or thermodynamic process"></select></div>
  <div id="optrow"><select id="opt"></select></div>
  <div id="sl"></div>
 
@@ -386,9 +387,25 @@ const GAS={
  'Carbon dioxide':{M:.044,s:1.3}
 };
 
+// Gas-law relationships and idealized thermodynamic paths.
+// Pressure is calculated from the ideal-gas equation; fixed constraints are
+// enforced by the selected concept rather than treated as independent sliders.
+const GAS_CONCEPTS={
+ boyle:{group:'Gas laws',name:"Boyle's Law",eq:'P₁V₁ = P₂V₂',body:'Change the gas volume while keeping temperature and amount of gas constant. Pressure changes inversely with volume.',detail:'Compressing the gas increases the frequency of wall collisions and raises pressure. Expanding it lowers pressure.',terms:'Constant: T and n · Relationship: P ∝ 1/V',sl:[['V','Volume (L)',5,50,.5,25]],kind:'boyle'},
+ charles:{group:'Gas laws',name:"Charles's Law",eq:'V₁/T₁ = V₂/T₂',body:'Change the absolute temperature while pressure and amount of gas remain constant.',detail:'Heating the gas makes it expand to maintain the selected constant pressure. Cooling makes its volume decrease.',terms:'Constant: P and n · Temperature must be in kelvin',sl:[['T','Temperature (K)',100,600,10,300]],kind:'charles'},
+ gay:{group:'Gas laws',name:"Gay-Lussac's Law",eq:'P₁/T₁ = P₂/T₂',body:'Change the absolute temperature while volume and amount of gas remain constant.',detail:'Heating a gas in a fixed-volume container raises its pressure. Cooling lowers its pressure.',terms:'Constant: V and n · Temperature must be in kelvin',sl:[['T','Temperature (K)',100,1000,10,300]],kind:'gay'},
+ avogadro:{group:'Gas laws',name:"Avogadro's Law",eq:'V₁/n₁ = V₂/n₂',body:'Change the amount of gas while temperature and pressure remain constant.',detail:'Adding more gas increases the volume needed to maintain the selected pressure. Removing gas decreases the volume.',terms:'Constant: P and T · n = amount of gas in moles',sl:[['n','Amount n (mol)',.5,5,.1,2]],kind:'avogadro'},
+ combined:{group:'Gas laws',name:'Combined Gas Law',eq:'P₁V₁/T₁ = P₂V₂/T₂',body:'Change temperature and volume together while keeping the amount of gas constant.',detail:'Pressure responds to both changes. The simulator calculates pressure from the ideal-gas equation for each state.',terms:'Constant: n · Temperature must be in kelvin',sl:[['T','Temperature (K)',100,1000,10,300],['V','Volume (L)',5,50,.5,25]],kind:'combined'},
+ isothermal:{group:'Thermodynamic processes',name:'Isothermal Process',eq:'ΔT = 0 · PV = constant',body:'The gas expands or compresses while its temperature remains constant.',detail:'For an ideal gas, internal energy remains unchanged during an isothermal process. Heat transfer balances the work.',terms:'Constant: T · Ideal-gas model',sl:[['V','Volume (L)',5,50,.5,25]],kind:'isothermal'},
+ isobaric:{group:'Thermodynamic processes',name:'Isobaric Process',eq:'P = constant · W = PΔV',body:'The gas is heated or cooled while pressure remains constant.',detail:'Its volume changes with absolute temperature. Expansion means the gas does work on its surroundings.',terms:'Constant: P · Ideal-gas model',sl:[['T','Temperature (K)',100,600,10,300]],kind:'isobaric'},
+ isochoric:{group:'Thermodynamic processes',name:'Isochoric Process',eq:'V = constant · W = 0',body:'The gas is heated or cooled inside a fixed-volume container.',detail:'Because the volume does not change, boundary work is zero. Pressure changes with absolute temperature.',terms:'Constant: V · No volume-change work',sl:[['T','Temperature (K)',100,1000,10,300]],kind:'isochoric'},
+ adiabatic:{group:'Thermodynamic processes',name:'Adiabatic Process',eq:'Q = 0 · PV^γ = constant',body:'The gas expands or compresses without heat entering or leaving the system.',detail:'Compression raises the gas temperature; expansion lowers it. This idealized model uses γ = 1.4 for a diatomic gas.',terms:'Constant: Q = 0 · Assumed heat-capacity ratio γ = 1.4',sl:[['V','Volume (L)',10,50,.5,25]],kind:'adiabatic'}
+};
+let gasConcept='boyle';
+
 const MODELS={
  gas:{
-  name:'Gas Laws',ic:'🎈',eq:'PV = nRT',
+  name:'Gas Laws & Processes',ic:'🎈',eq:'PV = nRT',
   opts:Object.keys(GAS),
   sl:[
    ['n','Amount n (mol)',.5,5,.1,2],
@@ -655,9 +672,21 @@ function state(Q){
 // Move the "actual" values toward the slider targets (dt in simulated seconds).
 function dynamics(dt){
  if(mode==='gas'){
-  S.T=approach(S.T,v.T,120*dt);
-  S.V=approach(S.V,v.V,8*dt);
-  S.n=approach(S.n,v.n,1.5*dt);
+  const c=GAS_CONCEPTS[gasConcept]||GAS_CONCEPTS.boyle;
+  switch(c.kind){
+   case 'boyle': case 'isothermal':
+    S.V=approach(S.V,v.V,8*dt);S.T=300;S.n=2;break;
+   case 'charles': case 'isobaric':
+    S.T=approach(S.T,v.T,120*dt);S.n=2;S.V=2*R*S.T/200;break;
+   case 'gay': case 'isochoric':
+    S.T=approach(S.T,v.T,120*dt);S.V=25;S.n=2;break;
+   case 'avogadro':
+    S.n=approach(S.n,v.n,1.5*dt);S.T=300;S.V=S.n*R*300/200;break;
+   case 'combined':
+    S.T=approach(S.T,v.T,120*dt);S.V=approach(S.V,v.V,8*dt);S.n=2;break;
+   case 'adiabatic':
+    S.V=approach(S.V,v.V,8*dt);S.n=2;S.T=300*Math.pow(25/S.V,.4);break;
+  }
  }else if(mode==='heat'){
   S.Q=Math.max(0,approach(S.Q,v.q,v.pw*dt));
  }else{
@@ -671,7 +700,7 @@ const D={n:N,Tk:300,hT:3.2,glow:0,st:null};
 function derive(){
  if(mode==='gas'){
   D.st=null;D.n=Math.floor(S.n*30);D.Tk=S.T;
-  D.hT=1+(S.V-5)/45*3.2;D.glow=(D.Tk-300)/700;
+  D.hT=clamp(1+(S.V-5)/45*3.2,1,4.2);D.glow=(D.Tk-300)/700;
  }else if(mode==='heat'){
   const st=state(S.Q),act=v.q-S.Q,b=clamp(S.Q/3000,0,1);
   D.st=st;D.n=N;D.Tk=st.T+273.15;D.hT=3.2;
@@ -859,12 +888,16 @@ function hud(){
  let t='';
 
  if(mode==='gas'){
-  const G=GAS[opt]||GAS.Nitrogen;
+  const G=GAS[opt]||GAS.Nitrogen,CN=GAS_CONCEPTS[gasConcept]||GAS_CONCEPTS.boyle;
+  const pressure=S.n*R*S.T/S.V; // kPa because kPa·L = J
   t=
-`Pressure  ${(S.n*R*S.T/(S.V/1000)/1000).toFixed(1)} kPa
+`${CN.name} · ${CN.eq}
+Pressure  ${pressure.toFixed(1)} kPa
+Volume    ${S.V.toFixed(2)} L
+Temp      ${S.T.toFixed(1)} K
+Amount    ${S.n.toFixed(2)} mol
 Avg KE    ${(1.5*KB*S.T).toExponential(2)} J
-v_rms     ${Math.sqrt(3*R*S.T/G.M).toFixed(0)} m/s
-Molecules ${(S.n*NA).toExponential(2)}`;
+v_rms     ${Math.sqrt(3*R*S.T/G.M).toFixed(0)} m/s`;
  }
  else if(mode==='heat'){
   const st=D.st,ph=['Solid','Part solid, part liquid','Liquid','Part liquid, part gas','Gas'][st.i];
@@ -957,13 +990,13 @@ function tick(dt){                       // dt = real seconds (0 = refresh witho
 
 // ---------- UI ----------
 function updateExplanation(k){
- const e=EXPLANATIONS[k];
+ const e=k==='gas'?(GAS_CONCEPTS[gasConcept]||GAS_CONCEPTS.boyle):EXPLANATIONS[k];
  $('explain').innerHTML=`
   <span class="kicker">What is going on here?</span>
-  <h3>${e.title}</h3>
+  <h3>${e.title||e.name}</h3>
   <p>${e.body}</p>
   <p>${e.detail}</p>
-  <span class="formula">${e.formula}</span>
+  <span class="formula">${e.formula||e.eq}</span>
   <p>${e.terms}</p>
  `;
 }
@@ -975,9 +1008,39 @@ function applyPalette(){                 // particle and liquid colours follow t
  G3.liq.material.color.setHex(m.liq);
 }
 
+function gasInitialState(){
+ const c=GAS_CONCEPTS[gasConcept]||GAS_CONCEPTS.boyle;
+ switch(c.kind){
+  case 'boyle': case 'isothermal': return{T:300,V:v.V,n:2};
+  case 'charles': case 'isobaric': return{T:v.T,V:2*R*v.T/200,n:2};
+  case 'gay': case 'isochoric': return{T:v.T,V:25,n:2};
+  case 'avogadro': return{T:300,V:v.n*R*300/200,n:v.n};
+  case 'combined': return{T:v.T,V:v.V,n:2};
+  case 'adiabatic': return{T:300*Math.pow(25/v.V,.4),V:v.V,n:2};
+  default:return{T:300,V:25,n:2};
+ }
+}
+
+function buildSliders(sliders){
+ $('sl').innerHTML='';
+ for(const key in syncs)delete syncs[key];
+ sliders.forEach(([id,lab,lo,hi,stp,df])=>{
+  v[id]=df;
+  const d=document.createElement('div');d.className='sl';
+  d.innerHTML=`<label><span>${lab}</span><b id="${id}_o"></b></label><input type="range" id="${id}" min="${lo}" max="${hi}" step="${stp}" value="${df}">`;
+  $('sl').appendChild(d);const el=d.querySelector('input');
+  const sync=()=>{
+   v[id]=+el.value;el.style.setProperty('--p',(el.value-el.min)/(el.max-el.min)*100+'%');
+   $(id+'_o').textContent=(+el.value).toFixed(stp<1?1:0);
+   if(built){dirty=true;if(mode==='heat'&&(id==='m'||id==='d')){fixQ();resetRun();}}
+  };
+  syncs[id]=sync;el.oninput=sync;sync();
+ });
+}
+
 function resetRun(){
  simT=0;TL=[];tlStep=.1;tlLast=-1;
- if(mode==='gas'){S.T=v.T;S.V=v.V;S.n=v.n;}
+ if(mode==='gas'){const st=gasInitialState();S.T=st.T;S.V=st.V;S.n=st.n;}
  else if(mode==='heat'){S.Q=0;}
  else{S.fq=0;S.fw=0;S.fn=v.fn;}
  buildLegend();
@@ -1002,47 +1065,30 @@ function setModel(k){
  mode=k;built=false;
  if(window.ThermoLabExtras)window.ThermoLabExtras.recordMode(k);
  const M=MODELS[k];
-
  document.querySelectorAll('.exp').forEach(c=>c.classList.toggle('on',c.dataset.k===k));
-
- $('eq').textContent=M.eq;
+ $('eq').textContent=mode==='gas'?GAS_CONCEPTS[gasConcept].eq:M.eq;
+ $('gasConceptRow').style.display=k==='gas'?'':'none';
+ $('gasConcept').innerHTML=
+  '<optgroup label="Gas laws">'+['boyle','charles','gay','avogadro','combined'].map(id=>`<option value="${id}">${GAS_CONCEPTS[id].name}</option>`).join('')+'</optgroup>'+
+  '<optgroup label="Thermodynamic processes">'+['isothermal','isobaric','isochoric','adiabatic'].map(id=>`<option value="${id}">${GAS_CONCEPTS[id].name}</option>`).join('')+'</optgroup>';
+ $('gasConcept').value=gasConcept;
  $('opt').innerHTML=M.opts.map(o=>`<option>${o}</option>`).join('');
  $('optrow').style.display=M.opts.length?'':'none';
- opt=M.opts[mode==='gas'?1:0]||'';
- $('opt').value=opt;
-
- $('sl').innerHTML='';
- for(const key in syncs)delete syncs[key];
-
- M.sl.forEach(([id,lab,lo,hi,stp,df])=>{
-  v[id]=df;
-  const d=document.createElement('div');
-  d.className='sl';
-  d.innerHTML=`
-   <label><span>${lab}</span><b id="${id}_o"></b></label>
-   <input type="range" id="${id}" min="${lo}" max="${hi}" step="${stp}" value="${df}">
-  `;
-  $('sl').appendChild(d);
-  const el=d.querySelector('input');
-  const sync=()=>{
-   v[id]=+el.value;
-   el.style.setProperty('--p',(el.value-el.min)/(el.max-el.min)*100+'%');
-   $(id+'_o').textContent=(+el.value).toFixed(stp<1?1:0);
-   if(built){
-    dirty=true;
-    if(mode==='heat'&&(id==='m'||id==='d')){fixQ();resetRun();}   // new setup = new run
-   }
-  };
-  syncs[id]=sync;
-  el.oninput=sync;
-  sync();
- });
+ opt=M.opts[mode==='gas'?1:0]||'';$('opt').value=opt;
+ buildSliders(k==='gas'?GAS_CONCEPTS[gasConcept].sl:M.sl);
  built=true;
  if(k==='heat')fixQ();
-
  $('hudc').style.display=k==='gas'?'none':'block';
  updateExplanation(k);
  resetRun();
+}
+
+function setGasConcept(id){
+ if(!GAS_CONCEPTS[id])return;
+ gasConcept=id;built=false;
+ $('gasConcept').value=id;$('eq').textContent=GAS_CONCEPTS[id].eq;
+ buildSliders(GAS_CONCEPTS[id].sl);built=true;
+ updateExplanation('gas');resetRun();
 }
 
 // Create model buttons.
@@ -1073,6 +1119,8 @@ function setSlider(id,val){
  el.value=clamp(val,+el.min,+el.max);
  if(syncs[id])syncs[id]();
 }
+
+$('gasConcept').onchange=e=>setGasConcept(e.target.value);
 
 $('opt').onchange=e=>{
  opt=e.target.value;
@@ -1128,7 +1176,7 @@ document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>setSpeed(+b.
 setSpeed(1);
 
 $('bJump').onclick=()=>{
- if(mode==='gas'){S.T=v.T;S.V=v.V;S.n=v.n;}
+ if(mode==='gas'){const st=gasInitialState();S.T=st.T;S.V=st.V;S.n=st.n;}
  else if(mode==='heat'){S.Q=v.q;}
  else{S.fq=v.fq;S.fw=v.fw;S.fn=v.fn;}
  dirty=true;
